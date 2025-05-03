@@ -99,16 +99,25 @@ function createIconMesh(idx, highQuality = false) {
  */
 function initThree() {
     canvas = document.getElementById('challenge-canvas');
-    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setClearColor(0x000000, 0);
-    renderer.setSize(canvas.width, canvas.height, false);
+    const dpr = window.devicePixelRatio || 1;
+    // Set canvas size for HiDPI
+    const width = 600, height = 220;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
 
-    camera = new THREE.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 100);
-    camera.position.set(0, 0, 8);
+    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
+    renderer.setClearColor(0x000000, 0);
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(width, height, false);
+
+    camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+    camera.position.set(0, 0, 7);
 
     scene = new THREE.Scene();
 
-    iconMeshes = CHALLENGES.map((_, idx) => createIconMesh(idx));
+    iconMeshes = CHALLENGES.map((_, idx) => createIconMesh(idx, true)); // highQuality for main view
 }
 
 /**
