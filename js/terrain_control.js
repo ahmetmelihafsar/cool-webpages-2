@@ -232,8 +232,8 @@ function setupWaypointDragDrop() {
         const type = e.dataTransfer.getData('text/plain');
         // Get mouse position relative to canvas
         canvasBounds = canvas.getBoundingClientRect();
-        const x = ((e.clientX - canvasBounds.left) / canvas.width) * 2 - 1;
-        const y = -((e.clientY - canvasBounds.top) / canvas.height) * 2 + 1;
+        const x = ((e.clientX - canvasBounds.left) / canvasBounds.width) * 2 - 1;
+        const y = -((e.clientY - canvasBounds.top) / canvasBounds.height) * 2 + 1;
         mouse.set(x, y);
         raycaster.setFromCamera(mouse, camera);
 
@@ -338,8 +338,8 @@ function setupCursorSupport() {
     const canvas = document.getElementById('terrain-canvas');
     canvas.addEventListener('mousemove', (e) => {
         canvasBounds = canvas.getBoundingClientRect();
-        const x = ((e.clientX - canvasBounds.left) / canvas.width) * 2 - 1;
-        const y = -((e.clientY - canvasBounds.top) / canvas.height) * 2 + 1;
+        const x = ((e.clientX - canvasBounds.left) / canvasBounds.width) * 2 - 1;
+        const y = -((e.clientY - canvasBounds.top) / canvasBounds.height) * 2 + 1;
         mouse.set(x, y);
         raycaster.setFromCamera(mouse, camera);
 
