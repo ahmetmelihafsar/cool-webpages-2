@@ -298,8 +298,7 @@ function createWaypointMarker(type, position) {
             break;
     }
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.copy(position);
-    mesh.position.z += 1.2;
+    mesh.position.set(0, 0, 1.2); // Only local z offset, no world position
 
     // Add order label (number)
     const group = new THREE.Group();
