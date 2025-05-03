@@ -1,5 +1,3 @@
-README.md
-
 # STEM Tactical Interface
 
 A modern, interactive web platform for STEM education and tactical simulation. This project features advanced 3D visualizations, interactive controls, and a neon-themed UI inspired by Watch Dogs, built with HTML, CSS, JavaScript, and Three.js/WebGL.
