@@ -224,28 +224,16 @@ function updateCarousel() {
         // Apply matching glow for selected item
         if (idx === currentIndex) {
             iconCanvas.style.filter = 'drop-shadow(0 0 16px #FFB400) drop-shadow(0 0 32px #FFB400)';
-            div.style.boxShadow = '0 0 32px 8px #FFB400, 0 0 8px 2px #fff inset';
+            div.classList.add('selected');
         } else {
             iconCanvas.style.filter = challenge.unlocked ? 'drop-shadow(0 0 8px #FFB400)' : 'grayscale(1) opacity(0.5)';
-            div.style.boxShadow = '0 0 16px 2px #000';
+            div.classList.remove('selected');
         }
         div.appendChild(iconCanvas);
         carouselItemsDiv.appendChild(div);
     });
 
-    // Move highlight frame to selected item
-    const highlight = document.getElementById('carousel-highlight');
-    const items = carouselItemsDiv.querySelectorAll('.carousel-item');
-    if (items[currentIndex]) {
-        const item = items[currentIndex];
-        // Position highlight over selected item
-        const left = item.offsetLeft + item.offsetWidth / 2 - 42; // 42 = highlight half width
-        highlight.style.transition = 'transform 0.3s cubic-bezier(.4,2,.6,1)';
-        highlight.style.transform = `translateX(${left}px)`;
-        highlight.style.opacity = '1';
-    } else {
-        highlight.style.opacity = '0';
-    }
+    // Remove highlight frame entirely for perfect overlap
 
     // Show label and description
     showChallengeLabel(CHALLENGES[currentIndex].name);

@@ -121,25 +121,17 @@ main {
 }
 .carousel-item.selected,
 .carousel-item:focus {
-    box-shadow: 0 0 24px 8px var(--color-primary-accent, #FFB400), 0 0 8px 2px #fff inset;
+    border: 3px solid var(--color-primary-accent, #FFB400);
+    box-shadow:
+        0 0 32px 8px var(--color-primary-accent, #FFB400),
+        0 0 24px 8px var(--color-primary-accent, #FFB400) inset,
+        0 0 8px 2px #fff inset;
     transform: scale(1.15);
     z-index: 2;
 }
 
 #carousel-highlight {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 84px;
-    height: 84px;
-    transform: translate(-50%, -50%);
-    border: 2.5px solid var(--color-primary-accent, #FFB400);
-    border-radius: 50%;
-    box-shadow: 0 0 32px 8px var(--color-primary-accent, #FFB400), 0 0 8px 2px #fff inset;
-    pointer-events: none;
-    z-index: 2;
-    transition: box-shadow 0.3s;
-    animation: highlight-glow 1.2s infinite alternate;
+    display: none !important;
 }
 
 @keyframes highlight-glow {
