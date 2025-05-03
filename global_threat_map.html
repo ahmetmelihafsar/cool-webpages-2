@@ -1,0 +1,60 @@
+<!-- /global_threat_map.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Threat Map</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/global_threat_map.css">
+</head>
+<body>
+    <header>
+        <h1>Global Threat Map</h1>
+        <nav><a href="index.html">Back to Home</a></nav>
+    </header>
+    <main id="map-page">
+        <div id="map-container">
+            <canvas id="globe-canvas"></canvas>
+        </div>
+        <aside id="map-sidebar">
+            <section id="explosion">
+                <h2>Explosion Coordinates</h2>
+                <p>Explosion X: <span id="explosion-x">-</span></p>
+                <p>Explosion Y: <span id="explosion-y">-</span></p>
+                <p>Explosion Z: <span id="explosion-z">-</span></p>
+            </section>
+            <section id="current">
+                <h2>Current Coordinates</h2>
+                <p>Current X: <span id="current-x">-</span></p>
+                <p>Current Y: <span id="current-y">-</span></p>
+                <p>Current Z: <span id="current-z">-</span></p>
+            </section>
+            <section id="solve-panel">
+                <h2>Solve</h2>
+                <label for="input-x">X:</label><input type="number" id="input-x">
+                <label for="input-y">Y:</label><input type="number" id="input-y">
+                <label for="input-z">Z:</label><input type="number" id="input-z">
+                <button id="solve-button">Solve</button>
+            </section>
+        </aside>
+    </main>
+    <footer>
+        <p>Status: Ready</p>
+<!-- Overlay controls for toggling axes and shading -->
+    <div id="overlay-controls" style="position:fixed;top:20px;left:20px;z-index:1000;">
+        <label style="color:#FFB400;font-family:monospace;">
+            <input type="checkbox" id="toggle-axes" checked>
+            Show Axes
+        </label>
+        <label style="color:#FFB400;font-family:monospace;margin-left:18px;">
+            <input type="checkbox" id="toggle-shading" checked>
+            Shading
+        </label>
+    </div>
+    </footer>
+    <script src="js/three.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/global_threat_map.js"></script>
+</body>
+</html>

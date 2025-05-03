@@ -1,0 +1,119 @@
+/* /styles/global_threat_map.css */
+
+/* Layout for Global Threat Map page */
+#map-page {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  height: calc(100vh - 100px); /* account for header and footer */
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: hidden; /* Prevent vertical scroll */
+}
+
+#map-container {
+  position: relative;
+  background-color: var(--color-background);
+  border: 1px solid var(--color-primary-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 600px;
+  min-height: 500px;
+}
+
+#map-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#map-sidebar {
+  background-color: rgba(5, 5, 5, 0.8);
+  border: 1px solid var(--color-primary-accent);
+  padding: 20px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+
+#map-sidebar section {
+  margin-bottom: 20px;
+}
+
+#map-sidebar h2 {
+  color: var(--color-primary-accent);
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+#map-sidebar p,
+#map-sidebar label {
+  color: var(--color-primary-text);
+  display: block;
+  margin-bottom: 5px;
+}
+
+#map-sidebar input[type="number"] {
+  width: 100%;
+  padding: 5px;
+  background: transparent;
+  border: 1px solid var(--color-primary-accent);
+  color: var(--color-primary-text);
+  font-family: var(--font-primary);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+#map-sidebar button {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 2px solid var(--color-primary-accent);
+  color: var(--color-primary-accent);
+  font-family: var(--font-primary);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+#map-sidebar button:hover {
+  background-color: var(--color-primary-accent);
+  color: var(--color-background);
+}
+
+/* Overlay controls styling */
+#overlay-controls {
+  position: absolute;
+  top: 30px;
+  left: 40px;
+  z-index: 1000;
+  background: rgba(10,10,10,0.92);
+  border: 2px solid #FFB400;
+  border-radius: 10px;
+  padding: 14px 22px 10px 22px;
+  box-shadow: 0 4px 24px #000a;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+}
+
+#overlay-controls label {
+  color: #FFB400;
+  font-family: var(--font-primary);
+  font-size: 15px;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+#overlay-controls input[type="checkbox"] {
+  accent-color: #FFB400;
+  margin-right: 6px;
+  transform: scale(1.2);
+}
+
+/* Footer styling */
+footer {
+  text-align: center;
+  padding: 10px;
+  color: var(--color-secondary-text);
+}
