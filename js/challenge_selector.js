@@ -224,6 +224,21 @@ function updateCarousel() {
         div.appendChild(iconCanvas);
         carouselItemsDiv.appendChild(div);
     });
+
+    // Move highlight frame to selected item
+    const highlight = document.getElementById('carousel-highlight');
+    const items = carouselItemsDiv.querySelectorAll('.carousel-item');
+    if (items[currentIndex]) {
+        const item = items[currentIndex];
+        // Position highlight over selected item
+        const left = item.offsetLeft + item.offsetWidth / 2 - 42; // 42 = highlight half width
+        highlight.style.transition = 'transform 0.3s cubic-bezier(.4,2,.6,1)';
+        highlight.style.transform = `translateX(${left}px)`;
+        highlight.style.opacity = '1';
+    } else {
+        highlight.style.opacity = '0';
+    }
+
     // Show label and description
     showChallengeLabel(CHALLENGES[currentIndex].name);
     showChallengeDesc(CHALLENGES[currentIndex]);
@@ -277,6 +292,15 @@ function setupEventHandlers() {
         }
     });
     timelineScrubber.addEventListener('input', onScrubTimeline);
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') {
+            navigateCarousel(-1);
+        } else if (e.key === 'ArrowRight') {
+            navigateCarousel(1);
+        }
+    });
 }
 
 /**
