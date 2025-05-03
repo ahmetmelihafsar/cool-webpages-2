@@ -48,6 +48,8 @@ const dom = {
 
 /// --- Three.js Variables ---
 let scene, camera, renderer, mesh, pulseMaterial, animationId;
+let controls, axesHelper;
+let showAxes = false;
 
 /// --- Initialization ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -60,6 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
     dom.actionButtonsContainer = document.getElementById("action-buttons");
     dom.injuryList = document.getElementById("injury-list");
     dom.logEntries = document.getElementById("log-entries"); // Get log container
+    
+    // Setup axes toggle
+    document.getElementById('toggle-axes').addEventListener('click', toggleAxes);
 
     // Initial UI update
     if (mockPatients.length > 0) {
@@ -176,13 +181,122 @@ function simulateVitals() {
  */
 function formatActionForLog(actionKey) {
     switch (actionKey) {
-        case 'irrigate': return 'Irrigation Applied';
-        case 'debris': return 'Debris Removal Complete';
-        case 'pain_med': return 'Pain Medication Administered';
-        case 'suture': return 'Suture Applied';
-        case 'bandage': return 'Bandage Applied';
-        default: return `Action [${actionKey}] performed`;
+        case 'irrigate':
+            applyTreatmentEffect('irrigation');
+            return 'Irrigation Applied';
+        case 'debris':
+            applyTreatmentEffect('debris');
+            return 'Debris Removal Complete';
+        case 'pain_med':
+            applyTreatmentEffect('pain');
+            return 'Pain Medication Administered';
+        case 'suture':
+            applyTreatmentEffect('suture');
+            return 'Suture Applied';
+        case 'bandage':
+            applyTreatmentEffect('bandage');
+            return 'Bandage Applied';
+        default:
+            return `Action [${actionKey}] performed`;
     }
+}
+
+/**
+ * Applies visual effects for different treatments
+ * @param {string} type - The type of treatment
+ */
+function applyTreatmentEffect(type) {
+    const patient = mockPatients[selectedPatientIndex];
+    if (!mesh || !patient) return;
+
+    switch (type) {
+        case 'irrigation':
+            // Temporary blue glow effect
+            const originalColor = pulseMaterial.color.clone();
+            pulseMaterial.color.setHex(0x00ffff);
+            setTimeout(() => pulseMaterial.color.copy(originalColor), 1000);
+            // Small vitals improvement
+            patient.vitals.life = Math.min(100, patient.vitals.life + 5);
+            break;
+            
+        case 'debris':
+            // Particle burst effect
+            createParticleBurst();
+            patient.vitals.life = Math.min(100, patient.vitals.life + 3);
+            break;
+            
+        case 'pain':
+            // Green healing pulse
+            pulseMaterial.opacity = 0.9;
+            setTimeout(() => pulseMaterial.opacity = 0.7, 1000);
+            patient.vitals.hr = Math.max(50, patient.vitals.hr - 10);
+            break;
+            
+        case 'suture':
+            // Red healing flash
+            mesh.scale.set(1.2, 1.2, 1.2);
+            setTimeout(() => mesh.scale.set(1, 1, 1), 200);
+            patient.vitals.life = Math.min(100, patient.vitals.life + 10);
+            break;
+            
+        case 'bandage':
+            // White pulse wave
+            const origOpacity = pulseMaterial.opacity;
+            pulseMaterial.opacity = 1;
+            setTimeout(() => pulseMaterial.opacity = origOpacity, 500);
+            patient.vitals.life = Math.min(100, patient.vitals.life + 7);
+            break;
+    }
+
+    // Update UI after treatment
+    updateUI(patient);
+}
+
+/**
+ * Creates a burst of particles from the mesh center
+ */
+function createParticleBurst() {
+    const burstCount = 20;
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    
+    for (let i = 0; i < burstCount; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI;
+        positions.push(
+            2 * Math.sin(phi) * Math.cos(theta),
+            2 * Math.sin(phi) * Math.sin(theta),
+            2 * Math.cos(phi)
+        );
+    }
+    
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({
+        color: 0xFF3B3B,
+        size: 0.1,
+        opacity: 1,
+        transparent: true
+    });
+    
+    const particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+    
+    // Animate particles outward and fade
+    const startTime = performance.now();
+    function animateParticles() {
+        const elapsed = performance.now() - startTime;
+        if (elapsed > 1000) {
+            scene.remove(particles);
+            return;
+        }
+        
+        const scale = 1 + elapsed / 200;
+        particles.scale.set(scale, scale, scale);
+        material.opacity = 1 - (elapsed / 1000);
+        
+        requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
 }
 
 /**
@@ -250,14 +364,28 @@ function initThreeScene() {
     camera.position.set(0, 1, 7); // Slightly adjusted camera position
     camera.lookAt(0, 0, 0); // Ensure camera looks at the center
 
+    // Initialize OrbitControls
+    controls = new THREE.OrbitControls(camera, dom.triageCanvas);
+    controls.enableDamping = true; // Add smooth damping
+    controls.dampingFactor = 0.05;
+    controls.rotateSpeed = 0.5;
+    controls.enablePan = false; // Disable panning for medical view
+    controls.minDistance = 5; // Set minimum zoom
+    controls.maxDistance = 15; // Set maximum zoom
+
+    // Initialize AxesHelper
+    axesHelper = new THREE.AxesHelper(3);
+    axesHelper.visible = showAxes;
+    scene.add(axesHelper);
+
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
     const pointLight = new THREE.PointLight(0xffffff, 0.8);
     camera.add(pointLight);
     scene.add(camera);
 
-    // Use Icosahedron for a more "tech" look than sphere
-    const geometry = new THREE.IcosahedronGeometry(2, 1); // Radius 2, detail 1
+    // Use high-resolution Icosahedron for a more detailed "tech" look
+    const geometry = new THREE.IcosahedronGeometry(2, 3); // Increased detail level from 1 to 3
     pulseMaterial = new THREE.MeshPhongMaterial({
         color: 0xFFB400,
         wireframe: true,
@@ -304,17 +432,11 @@ function animateScene() {
 
     const patient = mockPatients[selectedPatientIndex];
     if (mesh && patient) {
-        const pulseFrequency = (patient.vitals.hr / 60) * Math.PI * 2;
-        const pulse = 1 + 0.04 * Math.sin(performance.now() * 0.001 * pulseFrequency); // Slightly smaller pulse
-        mesh.scale.set(pulse, pulse, pulse);
-        mesh.rotation.y += 0.002; // Keep y-axis rotation
-        // mesh.rotation.x += 0.001; // Wobble removed
-    }
-    // Rotate particle cloud slowly in opposite direction
-    if(scene.children.find(c => c instanceof THREE.Points)) {
-        scene.children.find(c => c instanceof THREE.Points).rotation.y -= 0.0005;
+        mesh.scale.set(1, 1, 1); // Keep static scale
     }
 
+    // Update controls for smooth damping
+    controls.update();
 
     renderer.render(scene, camera);
 }
@@ -342,6 +464,18 @@ function onWindowResize() {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
+}
+
+/**
+ * Toggles the visibility of the axes helper
+ */
+function toggleAxes() {
+    showAxes = !showAxes;
+    axesHelper.visible = showAxes;
+    
+    // Toggle active class on button
+    const button = document.getElementById('toggle-axes');
+    button.classList.toggle('control-btn--active');
 }
 
 // End of /js/medical_triage.js
