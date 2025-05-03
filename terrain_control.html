@@ -1,0 +1,64 @@
+<!-- /terrain_control.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terrain & Drone Control</title>
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/terrain_control.css">
+</head>
+<body>
+    <header>
+        <h1>Terrain & Drone Control</h1>
+        <nav>
+            <a href="index.html">&larr; Back to Home</a>
+        </nav>
+    </header>
+    <main>
+        <div id="terrain-container">
+            <canvas id="terrain-canvas"></canvas>
+        </div>
+        <aside id="terrain-controls">
+            <section class="mode-toggles">
+                <label>
+                    <input type="radio" name="mode" value="thermal" checked>
+                    Thermal
+                </label>
+                <label>
+                    <input type="radio" name="mode" value="spectral">
+                    Spectral
+                </label>
+            </section>
+            <section class="waypoints">
+                <h2>Waypoints</h2>
+                <div class="waypoint-icons">
+                    <span class="waypoint-icon" draggable="true" data-type="triangle">&#9651;</span>
+                    <span class="waypoint-icon" draggable="true" data-type="square">&#9633;</span>
+                    <span class="waypoint-icon" draggable="true" data-type="circle">&#9675;</span>
+                </div>
+                <small>Drag onto terrain</small>
+            </section>
+            <section class="scan-info">
+                <div>
+                    <span>Scanned: </span><span id="scanned-count">12</span>
+                </div>
+                <div>
+                    <span>Positive: </span><span id="positive-count">3</span>
+                </div>
+                <div class="scan-thumbnail">
+                    <img id="scan-thumb" src="assets/mock_scan_thumb.png" alt="Scan Thumbnail" />
+                </div>
+            </section>
+        </aside>
+    </main>
+    <footer>
+        <span>Project Watch Dogs UI &copy; 2025</span>
+    </footer>
+    <!-- Scripts -->
+    <script src="js/three.min.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/terrain_control.js"></script>
+</body>
+</html>

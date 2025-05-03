@@ -1,0 +1,181 @@
+/* styles/terrain_control.css */
+/* Watch Dogs themed: deep black, neon amber, monospaced font */
+
+:root {
+  --color-background: #050505;
+  --color-primary-accent: #FFB400;
+  --color-secondary-text: #a0a0a0;
+  --color-primary-text: #f0f0f0;
+  --font-primary: 'Roboto Mono', monospace;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-primary-text);
+  font-family: var(--font-primary);
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  height: calc(100vh - 100px);
+  gap: 0;
+  box-sizing: border-box;
+}
+
+#terrain-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  height: 100%;
+  position: relative;
+  border-right: 2px solid var(--color-primary-accent);
+}
+
+#terrain-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #111;
+  border: none;
+  outline: none;
+  box-shadow: 0 0 32px 0 #1a1a1a inset;
+}
+
+#terrain-controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 32px 24px;
+  background: rgba(10, 10, 10, 0.98);
+  border-left: 2px solid var(--color-primary-accent);
+  min-width: 280px;
+  max-width: 340px;
+  box-sizing: border-box;
+  height: 100%;
+  gap: 32px;
+}
+
+.mode-toggles label {
+  color: var(--color-primary-accent);
+  font-weight: bold;
+  margin-right: 16px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.mode-toggles input[type="radio"] {
+  accent-color: var(--color-primary-accent);
+  margin-right: 4px;
+}
+
+.waypoints h2 {
+  color: var(--color-primary-accent);
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.waypoint-icons {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.waypoint-icon {
+  font-size: 2em;
+  color: var(--color-primary-accent);
+  background: #181818;
+  border: 2px solid var(--color-primary-accent);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: grab;
+  transition: box-shadow 0.2s, background 0.2s;
+  user-select: none;
+}
+
+.waypoint-icon:hover, .waypoint-icon.dragging {
+  background: var(--color-primary-accent);
+  color: #181818;
+  box-shadow: 0 0 12px 2px var(--color-primary-accent);
+}
+
+.scan-info {
+  margin-top: 16px;
+  color: var(--color-secondary-text);
+  font-size: 1em;
+}
+
+.scan-info div {
+  margin-bottom: 8px;
+}
+
+.scan-thumbnail {
+  margin-top: 8px;
+  border: 2px solid var(--color-primary-accent);
+  border-radius: 6px;
+  overflow: hidden;
+  width: 96px;
+  height: 64px;
+  background: #222;
+}
+
+.scan-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+header, footer {
+  background: #0a0a0a;
+  color: var(--color-primary-accent);
+  text-align: center;
+  padding: 16px 0;
+  letter-spacing: 2px;
+  border-bottom: 2px solid var(--color-primary-accent);
+}
+
+footer {
+  border-top: 2px solid var(--color-primary-accent);
+  border-bottom: none;
+  font-size: 0.95em;
+  margin-top: 0;
+}
+
+nav a {
+  color: var(--color-primary-accent);
+  text-decoration: none;
+  font-weight: bold;
+  margin-left: 16px;
+  transition: text-shadow 0.2s;
+}
+
+nav a:hover {
+  text-shadow: 0 0 8px var(--color-primary-accent);
+}
+
+@media (max-width: 900px) {
+  main {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 320px;
+  }
+  #terrain-controls {
+    flex-direction: row;
+    min-width: unset;
+    max-width: unset;
+    width: 100vw;
+    height: 320px;
+    padding: 16px 8px;
+    gap: 24px;
+    border-left: none;
+    border-top: 2px solid var(--color-primary-accent);
+  }
+  #terrain-container {
+    border-right: none;
+    border-bottom: 2px solid var(--color-primary-accent);
+  }
+}
