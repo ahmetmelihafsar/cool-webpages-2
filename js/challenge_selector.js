@@ -49,37 +49,39 @@ const previewCanvasCache = [];
  * @param {number} idx
  * @returns {THREE.LineLoop}
  */
-function createIconMesh(idx) {
+function createIconMesh(idx, highQuality = false) {
     let geometry, material, mesh;
     switch (idx) {
         case 0: // Hexagon
-            geometry = new THREE.CircleGeometry(1, 6);
+            geometry = new THREE.CircleGeometry(1, highQuality ? 48 : 6);
             break;
         case 1: // Maze (square spiral)
             geometry = new THREE.BufferGeometry();
             const spiralPoints = [];
-            for (let i = 0; i < 5; i++) {
-                spiralPoints.push(new THREE.Vector3(i - 2, 2 - i, 0));
-                spiralPoints.push(new THREE.Vector3(2 - i, 2 - i, 0));
+            const steps = highQuality ? 16 : 5;
+            for (let i = 0; i < steps; i++) {
+                spiralPoints.push(new THREE.Vector3(i - steps/2 + 0.5, steps/2 - i - 0.5, 0));
+                spiralPoints.push(new THREE.Vector3(steps/2 - i - 0.5, steps/2 - i - 0.5, 0));
             }
             geometry.setFromPoints(spiralPoints);
             break;
         case 2: // Prism (triangle)
-            geometry = new THREE.CircleGeometry(1, 3);
+            geometry = new THREE.CircleGeometry(1, highQuality ? 48 : 3);
             break;
         case 3: // Pulse Node (star)
             geometry = new THREE.BufferGeometry();
             const starPoints = [];
-            for (let i = 0; i < 10; i++) {
+            const starSteps = highQuality ? 40 : 10;
+            for (let i = 0; i < starSteps; i++) {
                 const r = i % 2 === 0 ? 1 : 0.5;
-                const a = (i / 10) * Math.PI * 2;
+                const a = (i / starSteps) * Math.PI * 2;
                 starPoints.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0));
             }
             starPoints.push(starPoints[0]);
             geometry.setFromPoints(starPoints);
             break;
         default:
-            geometry = new THREE.CircleGeometry(1, 5);
+            geometry = new THREE.CircleGeometry(1, highQuality ? 48 : 5);
     }
     material = new THREE.LineBasicMaterial({
         color: 0xFFB400,
@@ -130,37 +132,34 @@ function renderIconPreview(idx) {
     if (previewCanvasCache[idx]) {
         return previewCanvasCache[idx];
     }
+    // High-DPI, high-fidelity preview
+    const dpr = window.devicePixelRatio || 1;
+    const size = 96;
     const previewCanvas = document.createElement('canvas');
-    previewCanvas.width = 64;
-    previewCanvas.height = 64;
-    // Use a single offscreen renderer for all previews
-    if (!renderIconPreview._renderer) {
-        renderIconPreview._renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
-        renderIconPreview._renderer.setClearColor(0x000000, 0);
-        renderIconPreview._renderer.setSize(64, 64, false);
-    }
-    const previewRenderer = renderIconPreview._renderer;
+    previewCanvas.width = size * dpr;
+    previewCanvas.height = size * dpr;
+    previewCanvas.style.width = size + 'px';
+    previewCanvas.style.height = size + 'px';
+
+    // Create a renderer for this canvas
+    const previewRenderer = new THREE.WebGLRenderer({
+        canvas: previewCanvas,
+        alpha: true,
+        antialias: true,
+        preserveDrawingBuffer: true
+    });
+    previewRenderer.setClearColor(0x000000, 0);
+    previewRenderer.setPixelRatio(dpr);
+    previewRenderer.setSize(size, size, false);
+
     const previewCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     previewCamera.position.set(0, 0, 6);
 
     const previewScene = new THREE.Scene();
-    const mesh = createIconMesh(idx);
+    const mesh = createIconMesh(idx, true); // pass highQuality=true
     mesh.rotation.z = Math.PI / 8;
     previewScene.add(mesh);
     previewRenderer.render(previewScene, previewCamera);
-
-    // Copy rendered pixels to the previewCanvas
-    const pixels = new Uint8Array(4 * 64 * 64);
-    previewRenderer.readRenderTargetPixels(
-        previewRenderer.getRenderTarget() || previewRenderer.getRenderTarget(),
-        0, 0, 64, 64, pixels
-    );
-    const ctx = previewCanvas.getContext('2d');
-    const imageData = ctx.createImageData(64, 64);
-    for (let i = 0; i < pixels.length; i++) {
-        imageData.data[i] = pixels[i];
-    }
-    ctx.putImageData(imageData, 0, 0);
 
     previewCanvas.style.filter = CHALLENGES[idx].unlocked ? 'drop-shadow(0 0 8px #FFB400)' : 'grayscale(1) opacity(0.5)';
     previewCanvasCache[idx] = previewCanvas;
