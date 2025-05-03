@@ -1,10 +1,11 @@
 // js/challenge_selector.js
 
 /**
- * Challenge Selector Page Logic
- * - Initializes Three.js scene for geometric icons.
- * - Handles carousel navigation, highlight animation (stub).
- * - Manages challenge label fade-in and timeline scrubber (stub).
+ * Challenge Selector Page Logic (Advanced)
+ * - Renders live geometric icon previews in carousel.
+ * - Smooth carousel transitions and highlight animation.
+ * - Shows challenge description and unlock status.
+ * - Timeline scrubber updates value display.
  * - Watch Dogs neon theme.
  * Author: Roo
  */
@@ -31,97 +32,119 @@ const CHALLENGES = [
 let currentIndex = 0;
 
 // ---- DOM Elements ----
-let canvas, carouselItemsDiv, labelSpan, timelineScrubber;
+let canvas, carouselItemsDiv, labelSpan, descDiv, timelineScrubber, timelineValueSpan;
 
-// ---- Three.js Scene ----
+// ---- Three.js Scene for Main Canvas ----
 let renderer, scene, camera, iconMeshes = [];
+
+/**
+ * Create a geometric icon mesh for a challenge.
+ * @param {number} idx
+ * @returns {THREE.LineLoop}
+ */
+function createIconMesh(idx) {
+    let geometry, material, mesh;
+    switch (idx) {
+        case 0: // Hexagon
+            geometry = new THREE.CircleGeometry(1, 6);
+            break;
+        case 1: // Maze (square spiral)
+            geometry = new THREE.BufferGeometry();
+            const spiralPoints = [];
+            for (let i = 0; i < 5; i++) {
+                spiralPoints.push(new THREE.Vector3(i - 2, 2 - i, 0));
+                spiralPoints.push(new THREE.Vector3(2 - i, 2 - i, 0));
+            }
+            geometry.setFromPoints(spiralPoints);
+            break;
+        case 2: // Prism (triangle)
+            geometry = new THREE.CircleGeometry(1, 3);
+            break;
+        case 3: // Pulse Node (star)
+            geometry = new THREE.BufferGeometry();
+            const starPoints = [];
+            for (let i = 0; i < 10; i++) {
+                const r = i % 2 === 0 ? 1 : 0.5;
+                const a = (i / 10) * Math.PI * 2;
+                starPoints.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0));
+            }
+            starPoints.push(starPoints[0]);
+            geometry.setFromPoints(starPoints);
+            break;
+        default:
+            geometry = new THREE.CircleGeometry(1, 5);
+    }
+    material = new THREE.LineBasicMaterial({
+        color: 0xFFB400,
+        linewidth: 2,
+        transparent: true,
+        opacity: 0.85
+    });
+    mesh = new THREE.LineLoop(geometry, material);
+    mesh.position.set(0, 0, 0);
+    return mesh;
+}
 
 /**
  * Initialize Three.js scene and render geometric icons as glowing line-loops.
  */
 function initThree() {
     canvas = document.getElementById('challenge-canvas');
-    // Set up renderer
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setClearColor(0x000000, 0); // transparent background
+    renderer.setClearColor(0x000000, 0);
     renderer.setSize(canvas.width, canvas.height, false);
 
-    // Set up camera
     camera = new THREE.PerspectiveCamera(45, canvas.width / canvas.height, 0.1, 100);
     camera.position.set(0, 0, 8);
 
-    // Set up scene
     scene = new THREE.Scene();
 
-    // Create geometric icons (glowing line-loops)
-    iconMeshes = CHALLENGES.map((challenge, idx) => {
-        let geometry, material, mesh;
-        // Different geometry per challenge for visual variety
-        switch (idx) {
-            case 0: // Hexagon
-                geometry = new THREE.CircleGeometry(1, 6);
-                break;
-            case 1: // Maze (square spiral)
-                geometry = new THREE.BufferGeometry();
-                const spiralPoints = [];
-                for (let i = 0; i < 5; i++) {
-                    spiralPoints.push(new THREE.Vector3(i - 2, 2 - i, 0));
-                    spiralPoints.push(new THREE.Vector3(2 - i, 2 - i, 0));
-                }
-                geometry.setFromPoints(spiralPoints);
-                break;
-            case 2: // Prism (triangle)
-                geometry = new THREE.CircleGeometry(1, 3);
-                break;
-            case 3: // Pulse Node (star)
-                geometry = new THREE.BufferGeometry();
-                const starPoints = [];
-                for (let i = 0; i < 10; i++) {
-                    const r = i % 2 === 0 ? 1 : 0.5;
-                    const a = (i / 10) * Math.PI * 2;
-                    starPoints.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0));
-                }
-                starPoints.push(starPoints[0]);
-                geometry.setFromPoints(starPoints);
-                break;
-            default:
-                geometry = new THREE.CircleGeometry(1, 5);
-        }
-        material = new THREE.LineBasicMaterial({
-            color: 0xFFB400,
-            linewidth: 2,
-            transparent: true,
-            opacity: 0.85
-        });
-        mesh = new THREE.LineLoop(geometry, material);
-        mesh.position.x = 0;
-        mesh.position.y = 0;
-        mesh.position.z = 0;
-        // Add glow effect via custom material or postprocessing (stub)
-        return mesh;
-    });
+    iconMeshes = CHALLENGES.map((_, idx) => createIconMesh(idx));
 }
 
 /**
  * Render the currently selected icon in the center of the canvas.
  */
 function renderIcon() {
-    // Remove previous mesh
     scene.clear();
-    // Add current mesh
     const mesh = iconMeshes[currentIndex];
-    scene.add(mesh);
-    // Animate rotation for effect
     mesh.rotation.z += 0.01;
+    scene.add(mesh);
     renderer.render(scene, camera);
 }
 
 /**
- * Animate the glowing highlight frame (stub).
+ * Render a geometric icon preview to a canvas for the carousel.
+ * @param {number} idx
+ * @returns {HTMLCanvasElement}
+ */
+function renderIconPreview(idx) {
+    const previewCanvas = document.createElement('canvas');
+    previewCanvas.width = 64;
+    previewCanvas.height = 64;
+    const previewRenderer = new THREE.WebGLRenderer({ canvas: previewCanvas, alpha: true, antialias: true });
+    previewRenderer.setClearColor(0x000000, 0);
+    previewRenderer.setSize(64, 64, false);
+
+    const previewCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    previewCamera.position.set(0, 0, 6);
+
+    const previewScene = new THREE.Scene();
+    const mesh = createIconMesh(idx);
+    mesh.rotation.z = Math.PI / 8;
+    previewScene.add(mesh);
+    previewRenderer.render(previewScene, previewCamera);
+    return previewCanvas;
+}
+
+/**
+ * Animate the glowing highlight frame.
  */
 function animateHighlight() {
-    // Could animate #carousel-highlight border or box-shadow here
-    // (Stub for future animation)
+    const highlight = document.getElementById('carousel-highlight');
+    highlight.classList.remove('pulse');
+    void highlight.offsetWidth; // force reflow
+    highlight.classList.add('pulse');
 }
 
 /**
@@ -137,10 +160,28 @@ function showChallengeLabel(text) {
 }
 
 /**
+ * Show challenge description and unlock status.
+ * @param {Challenge} challenge
+ */
+function showChallengeDesc(challenge) {
+    descDiv.innerHTML = `
+        <span class="desc-text">${challenge.description}</span>
+        <span class="status ${challenge.unlocked ? 'unlocked' : 'locked'}">
+            ${challenge.unlocked ? 'Unlocked' : 'Locked'}
+        </span>
+    `;
+}
+
+/**
  * Update carousel UI and Three.js icon.
  */
 function updateCarousel() {
-    // Update carousel items
+    // Animate carousel fade
+    carouselItemsDiv.classList.remove('fade');
+    void carouselItemsDiv.offsetWidth;
+    carouselItemsDiv.classList.add('fade');
+
+    // Update carousel items with live icon previews
     carouselItemsDiv.innerHTML = '';
     CHALLENGES.forEach((challenge, idx) => {
         const div = document.createElement('div');
@@ -148,15 +189,19 @@ function updateCarousel() {
         div.tabIndex = 0;
         div.setAttribute('data-idx', idx);
         div.title = challenge.name;
-        // Icon placeholder (could be replaced with SVG or canvas preview)
-        div.innerHTML = `<span style="color:${challenge.unlocked ? '#FFB400' : '#555'};font-size:2rem;">&#9679;</span>`;
+        // Render icon preview
+        const iconCanvas = renderIconPreview(idx);
+        iconCanvas.style.filter = challenge.unlocked ? 'drop-shadow(0 0 8px #FFB400)' : 'grayscale(1) opacity(0.5)';
+        div.appendChild(iconCanvas);
         carouselItemsDiv.appendChild(div);
     });
-    // Show label
+    // Show label and description
     showChallengeLabel(CHALLENGES[currentIndex].name);
+    showChallengeDesc(CHALLENGES[currentIndex]);
     // Update timeline scrubber max
     timelineScrubber.max = CHALLENGES[currentIndex].timelineMax;
     timelineScrubber.value = 0;
+    timelineValueSpan.textContent = '0';
     // Render Three.js icon
     renderIcon();
 }
@@ -172,11 +217,11 @@ function navigateCarousel(dir) {
 }
 
 /**
- * Handle timeline scrubber change (stub).
+ * Handle timeline scrubber change.
  */
 function onScrubTimeline(e) {
-    // Stub: Implement timeline logic here
-    // e.target.value gives the current scrubber value
+    timelineValueSpan.textContent = e.target.value;
+    // Optionally, animate something on the main icon based on timeline value
 }
 
 /**
@@ -212,7 +257,9 @@ function initChallengeSelector() {
     // Get DOM elements
     carouselItemsDiv = document.getElementById('carousel-items');
     labelSpan = document.getElementById('challenge-label');
+    descDiv = document.getElementById('challenge-desc');
     timelineScrubber = document.getElementById('timeline-scrubber');
+    timelineValueSpan = document.getElementById('timeline-value');
     // Three.js setup
     initThree();
     // Initial render
@@ -231,3 +278,18 @@ function initChallengeSelector() {
 
 // ---- Initialize on DOMContentLoaded ----
 document.addEventListener('DOMContentLoaded', initChallengeSelector);
+
+/* --- Carousel fade and highlight animation CSS (injected for pulse/fade) --- */
+(function injectCarouselCSS() {
+    const style = document.createElement('style');
+    style.textContent = `
+    #carousel-items.fade { transition: opacity 0.3s; opacity: 0.5; }
+    #carousel-items.fade.selected { opacity: 1; }
+    #carousel-highlight.pulse { animation: highlight-glow 0.7s; }
+    #challenge-desc { margin-top: 0.5em; font-size: 1.1rem; color: #FFB400; }
+    #challenge-desc .status { margin-left: 1em; font-weight: bold; }
+    #challenge-desc .locked { color: #a00; text-shadow: 0 0 8px #a00; }
+    #challenge-desc .unlocked { color: #0fa; text-shadow: 0 0 8px #0fa; }
+    `;
+    document.head.appendChild(style);
+})();
