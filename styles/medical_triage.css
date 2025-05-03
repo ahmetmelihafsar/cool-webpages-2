@@ -156,6 +156,29 @@ body {
     font-size: 0.8rem;
 }
 
+/* Log Display Styling */
+#log-display #log-entries {
+    max-height: 150px; /* Limit height and allow scrolling */
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.3); /* Slightly darker background */
+    border: 1px dashed rgba(255, 180, 0, 0.2); /* Dashed border */
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--color-secondary-text); /* Use secondary text color */
+}
+
+#log-display #log-entries p {
+    margin: 0 0 0.5rem 0; /* Spacing between log entries */
+    text-indent: -1em; /* Hanging indent for visual structure */
+    padding-left: 1em;
+}
+
+#log-display #log-entries p::before {
+    content: "> "; /* Add a marker for each log entry */
+    color: var(--color-primary-accent); /* Use accent color for marker */
+}
 /* Header and Footer (Keep similar styles) */
 header, footer {
     background: #000;

@@ -11,7 +11,7 @@
 </head>
 <body>
     <header>
-        <h1>Medical Triage</h1>
+        <h1>STEM Unit - Medical Bay</h1>
         <nav>
             <a href="index.html" id="back-to-index">&larr; Back to Dashboard</a>
         </nav>
@@ -26,7 +26,7 @@
         <!-- Sidebar for HUD, actions, and labels -->
         <aside id="sidebar">
             <section id="vitals-hud" class="sidebar-section">
-                <h2>Vitals HUD</h2>
+                <h2>Vitals HUD <span style="font-size: 0.8em; color: var(--color-secondary-text);">// DESIGNATION: ZEUS</span></h2>
                 <div class="vital-item">
                     <span class="vital-label">Heart Rate:</span>
                     <span id="hud-heart-rate" class="vital-value">-- bpm</span>
@@ -60,6 +60,13 @@
                     <li><span class="injury-marker">A</span> Head Trauma (Stub)</li>
                     <li><span class="injury-marker">B</span> Laceration - Arm (Stub)</li>
                 </ul>
+            </section>
+<section id="log-display" class="sidebar-section">
+                <h2>Event Log</h2>
+                <div id="log-entries">
+                    <!-- Log entries will be populated by JS -->
+                    <p>Initializing system...</p>
+                </div>
             </section>
         </aside>
     </main>

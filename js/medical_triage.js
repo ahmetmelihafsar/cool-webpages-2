@@ -5,34 +5,33 @@
  * - Handles 3D visualization, HUD updates, injury list, and treatment actions.
  * - Initializes Three.js scene on the triage canvas.
  * - Simulates patient data and vitals updates for the HUD.
- * - Stubs for injury labels and treatment actions.
+ * - Implements interactive log updates for treatment actions.
  * Author: Roo
  */
 
 /// --- Mock Data ---
 
-/**
- * Array of mock patients for triage simulation.
- * Using only the first patient for display in this version.
- */
 const mockPatients = [
     {
         id: "P1",
-        name: "Alex Mercer",
-        status: "Critical",
+        name: "Alex Mercer // Designation: ZEUS", // Added lore
+        status: "Critical - Biohazard Containment", // Added lore
         priority: "high",
         vitals: { hr: 132, spo2: 88, life: 42 },
-        injuries: [ // Added injuries array
-            { id: "A", description: "Head Trauma" },
-            { id: "B", description: "Laceration - Left Arm" },
-            { id: "C", description: "Internal Bleeding (Suspected)" }
+        injuries: [
+            { id: "A", description: "Compound Fracture - Tibia (L)" }, // More specific
+            { id: "B", description: "Severe Laceration - Deltoid (R)" },
+            { id: "C", description: "Suspected Viral Hemorrhage" } // Lore-based
         ],
-        logs: ["Severe laceration (left arm)", "Low SpO₂", "Unresponsive to pain"],
+        logs: [ // Initial logs with timestamps
+            "11:35:02 - Patient admitted. Unresponsive.",
+            "11:35:45 - Initial vitals unstable. HR elevated.",
+            "11:36:10 - Biohazard protocol initiated.",
+        ],
     },
-    // Add more patients here if needed for future selection logic
 ];
 
-let selectedPatientIndex = 0; // Index of the patient currently displayed
+let selectedPatientIndex = 0;
 let vitalsInterval = null;
 
 /// --- DOM Elements ---
@@ -44,6 +43,7 @@ const dom = {
     hudLifePercent: null,
     actionButtonsContainer: null,
     injuryList: null,
+    logEntries: null, // Added log container
 };
 
 /// --- Three.js Variables ---
@@ -59,27 +59,31 @@ document.addEventListener("DOMContentLoaded", () => {
     dom.hudLifePercent = document.getElementById("hud-life-percent");
     dom.actionButtonsContainer = document.getElementById("action-buttons");
     dom.injuryList = document.getElementById("injury-list");
+    dom.logEntries = document.getElementById("log-entries"); // Get log container
 
-    // Initial UI update with the first patient's data
+    // Initial UI update
     if (mockPatients.length > 0) {
         updateUI(mockPatients[selectedPatientIndex]);
+    } else {
+        // Handle case with no patients (optional)
+        if(dom.logEntries) dom.logEntries.innerHTML = "<p>No patient data loaded.</p>";
     }
 
-    // Simulate vitals updates every 2 seconds
+    // Simulate vitals updates
     vitalsInterval = setInterval(simulateVitals, 2000);
 
-    // Initialize Three.js visualization
+    // Initialize Three.js
     initThreeScene();
 
-    // Setup listeners for action buttons
+    // Setup action buttons
     setupActionButtons();
 
-    // Add resize listener for Three.js canvas
+    // Add resize listener
     window.addEventListener('resize', onWindowResize, false);
 });
 
 /**
- * Updates the HUD and Injury List based on patient data.
+ * Updates the HUD, Injury List, and Log Display based on patient data.
  * @param {object} patient - The patient data object.
  */
 function updateUI(patient) {
@@ -91,26 +95,55 @@ function updateUI(patient) {
     dom.hudLifePercent.textContent = `${patient.vitals.life} %`;
 
     // Update Injury List
-    dom.injuryList.innerHTML = ""; // Clear previous list
+    dom.injuryList.innerHTML = "";
     if (patient.injuries && patient.injuries.length > 0) {
         patient.injuries.forEach(injury => {
             const li = document.createElement("li");
-            li.innerHTML = `<span class="injury-marker">${injury.id}</span> ${injury.description}`;
+            // Added patient ID context to injury description for lore
+            li.innerHTML = `<span class="injury-marker">${injury.id}</span> ${injury.description} (Patient ${patient.id})`;
             dom.injuryList.appendChild(li);
         });
     } else {
-        dom.injuryList.innerHTML = "<li>No injuries listed.</li>";
+        dom.injuryList.innerHTML = "<li>Scan complete: No significant trauma detected.</li>"; // Lore update
     }
+
+    // Update Log Display
+    updateLogDisplay(patient);
 
     // Update 3D scene based on vitals
     updateSceneOnVitals(patient.vitals);
 }
 
 /**
+ * Updates the log display area with patient logs.
+ * @param {object} patient - The patient data object.
+ */
+function updateLogDisplay(patient) {
+    if (!dom.logEntries || !patient || !patient.logs) return;
+
+    dom.logEntries.innerHTML = ""; // Clear previous logs
+
+    if (patient.logs.length === 0) {
+        dom.logEntries.innerHTML = "<p>Log empty. Awaiting events...</p>"; // Placeholder
+        return;
+    }
+
+    // Add logs, newest first
+    patient.logs.forEach(logMsg => {
+        const p = document.createElement("p");
+        p.textContent = logMsg;
+        dom.logEntries.prepend(p); // Prepend to show newest first
+    });
+
+     // Auto-scroll to the top (most recent entry)
+    dom.logEntries.scrollTop = 0;
+}
+
+
+/**
  * Simulate vitals changes for demo purposes.
  */
 function simulateVitals() {
-    // Simulate changes for the selected patient
     const patient = mockPatients[selectedPatientIndex];
     if (!patient) return;
 
@@ -119,8 +152,37 @@ function simulateVitals() {
     patient.vitals.spo2 = Math.max(80, Math.min(100, patient.vitals.spo2 + Math.round((Math.random() - 0.5) * 2)));
     patient.vitals.life = Math.max(0, Math.min(100, patient.vitals.life + Math.round((Math.random() - 0.5) * 3)));
 
+    // Add occasional log entry for vitals change
+    if (Math.random() < 0.1) { // 10% chance each interval
+        const now = new Date();
+        const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        let logMessage = `${timestamp} - Vitals fluctuation detected.`;
+        if (patient.vitals.hr > 140) logMessage += " Tachycardia noted.";
+        if (patient.vitals.spo2 < 90) logMessage += " Hypoxia worsening.";
+        patient.logs.unshift(logMessage); // Add to beginning
+        // Limit log length (optional)
+        if (patient.logs.length > 50) patient.logs.pop();
+    }
+
+
     // Refresh UI
     updateUI(patient);
+}
+
+/**
+ * Formats the action name for display in logs.
+ * @param {string} actionKey - The data-action value (e.g., "pain_med").
+ * @returns {string} - Formatted action name (e.g., "Pain Medicine Administered").
+ */
+function formatActionForLog(actionKey) {
+    switch (actionKey) {
+        case 'irrigate': return 'Irrigation Applied';
+        case 'debris': return 'Debris Removal Complete';
+        case 'pain_med': return 'Pain Medication Administered';
+        case 'suture': return 'Suture Applied';
+        case 'bandage': return 'Bandage Applied';
+        default: return `Action [${actionKey}] performed`;
+    }
 }
 
 /**
@@ -131,9 +193,31 @@ function setupActionButtons() {
     buttons.forEach(button => {
         button.addEventListener("click", (event) => {
             const action = event.target.dataset.action;
-            console.log(`Treatment Action Clicked: ${action}`);
-            // TODO: Implement actual treatment logic and update patient state/logs
-            alert(`Action: ${action} (Stub)`); // Simple feedback for now
+            const patient = mockPatients[selectedPatientIndex];
+            if (!patient) return;
+
+            // Create timestamp
+            const now = new Date();
+            const timestamp = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            // Create log message
+            const formattedAction = formatActionForLog(action);
+            const logMessage = `${timestamp} - ${formattedAction}. Operator: [USER]`; // Added operator context
+
+            // Add log entry to the beginning of the array
+            patient.logs.unshift(logMessage);
+
+             // Limit log length (optional)
+            if (patient.logs.length > 50) patient.logs.pop(); // Remove oldest log if > 50 entries
+
+            console.log(`Log Entry Added: ${logMessage}`);
+
+            // Update the log display immediately
+            updateLogDisplay(patient);
+
+            // Optional: Add visual feedback to button (e.g., temporary class)
+            button.classList.add('action-btn--activated');
+            setTimeout(() => button.classList.remove('action-btn--activated'), 300);
         });
     });
 }
@@ -141,15 +225,10 @@ function setupActionButtons() {
 
 /// --- Three.js Visualization ---
 
-/**
- * Initialize Three.js scene for vitals visualization.
- */
 function initThreeScene() {
-    // Ensure Three.js is available
     if (typeof THREE === "undefined") {
         console.error("Three.js library not loaded!");
-        // Display error on canvas if possible
-        const ctx = dom.triageCanvas.getContext("2d");
+        const ctx = dom.triageCanvas?.getContext("2d");
         if (ctx) {
             ctx.font = "16px monospace";
             ctx.fillStyle = "#FFB400";
@@ -162,46 +241,44 @@ function initThreeScene() {
         return;
     }
 
-    // Renderer
     renderer = new THREE.WebGLRenderer({ canvas: dom.triageCanvas, alpha: true, antialias: true });
-    renderer.setClearColor(0x000000, 0); // transparent background
+    renderer.setClearColor(0x000000, 0);
     renderer.setSize(dom.canvasContainer.clientWidth, dom.canvasContainer.clientHeight);
 
-    // Scene and Camera
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, dom.canvasContainer.clientWidth / dom.canvasContainer.clientHeight, 0.1, 1000);
-    camera.position.set(0, 0, 7); // Position camera further back
+    camera.position.set(0, 1, 7); // Slightly adjusted camera position
+    camera.lookAt(0, 0, 0); // Ensure camera looks at the center
 
-    // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
     const pointLight = new THREE.PointLight(0xffffff, 0.8);
-    camera.add(pointLight); // Attach light to camera
+    camera.add(pointLight);
     scene.add(camera);
 
-    // Geometry: Stub wireframe sphere
-    const geometry = new THREE.SphereGeometry(2, 32, 24);
-    pulseMaterial = new THREE.MeshPhongMaterial({ // Use Phong for lighting
+    // Use Icosahedron for a more "tech" look than sphere
+    const geometry = new THREE.IcosahedronGeometry(2, 1); // Radius 2, detail 1
+    pulseMaterial = new THREE.MeshPhongMaterial({
         color: 0xFFB400,
         wireframe: true,
         transparent: true,
         opacity: 0.7,
-        shininess: 50
+        shininess: 60 // Increased shininess
     });
     mesh = new THREE.Mesh(geometry, pulseMaterial);
     scene.add(mesh);
 
-    // Particle effect: Stub random points
+    // Particle effect
     const particles = new THREE.BufferGeometry();
-    const particleCount = 500; // Increased count
+    const particleCount = 600; // More particles
     const positions = [];
-    const sphereRadius = 2.5; // Slightly larger radius for particles
+    const sphereRadius = 2.8; // Wider particle cloud
     for (let i = 0; i < particleCount; i++) {
         const u = Math.random();
         const v = Math.random();
         const theta = 2 * Math.PI * u;
         const phi = Math.acos(2 * v - 1);
-        const r = sphereRadius + (Math.random() - 0.5) * 0.5; // Add some depth variation
+        const r = sphereRadius + (Math.random() - 0.5) * 0.8; // More depth
         positions.push(
             r * Math.sin(phi) * Math.cos(theta),
             r * Math.sin(phi) * Math.sin(theta),
@@ -210,72 +287,58 @@ function initThreeScene() {
     }
     particles.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     const particleMaterial = new THREE.PointsMaterial({
-        color: 0xFFB400, // Match accent
-        size: 0.06,
-        opacity: 0.6,
+        color: 0xFFB400,
+        size: 0.05, // Slightly smaller points
+        opacity: 0.5, // More subtle
         transparent: true,
-        sizeAttenuation: true // Points scale with distance
+        sizeAttenuation: true
     });
     const pointCloud = new THREE.Points(particles, particleMaterial);
     scene.add(pointCloud);
 
-    // Start animation loop
     animateScene();
 }
 
-/**
- * Animation loop for the Three.js scene.
- */
 function animateScene() {
-    animationId = requestAnimationFrame(animateScene); // Loop
+    animationId = requestAnimationFrame(animateScene);
 
     const patient = mockPatients[selectedPatientIndex];
     if (mesh && patient) {
-        // Pulse scale with HR
-        const pulseFrequency = (patient.vitals.hr / 60) * Math.PI * 2; // Hz to rad/s
-        const pulse = 1 + 0.05 * Math.sin(performance.now() * 0.001 * pulseFrequency);
+        const pulseFrequency = (patient.vitals.hr / 60) * Math.PI * 2;
+        const pulse = 1 + 0.04 * Math.sin(performance.now() * 0.001 * pulseFrequency); // Slightly smaller pulse
         mesh.scale.set(pulse, pulse, pulse);
-
-        // Subtle rotation
-        mesh.rotation.y += 0.002;
-        mesh.rotation.x += 0.001;
+        mesh.rotation.y += 0.002; // Keep y-axis rotation
+        // mesh.rotation.x += 0.001; // Wobble removed
     }
+    // Rotate particle cloud slowly in opposite direction
+    if(scene.children.find(c => c instanceof THREE.Points)) {
+        scene.children.find(c => c instanceof THREE.Points).rotation.y -= 0.0005;
+    }
+
 
     renderer.render(scene, camera);
 }
 
-/**
- * Update the 3D visualization based on new vitals (e.g., color).
- * @param {object} vitals
- */
 function updateSceneOnVitals(vitals) {
     if (!mesh || !pulseMaterial) return;
 
-    // Change color based on SpO2 and Life %
     let targetColor;
     if (vitals.spo2 < 90 || vitals.life < 50) {
-        targetColor = new THREE.Color(0xFF3B3B); // Red for critical
+        targetColor = new THREE.Color(0xFF3B3B); // Red
     } else if (vitals.spo2 < 95 || vitals.life < 80) {
-        targetColor = new THREE.Color(0xFFB400); // Amber for warning
+        targetColor = new THREE.Color(0xFFB400); // Amber
     } else {
-        targetColor = new THREE.Color(0x00FFC6); // Cyan/Teal for stable
+        targetColor = new THREE.Color(0x00FFC6); // Cyan/Teal
     }
-    // Smoothly transition color (optional, requires tweening library or manual lerp)
-    pulseMaterial.color.copy(targetColor);
+    pulseMaterial.color.lerp(targetColor, 0.1); // Smooth color transition
 
-    // Adjust opacity based on Life % (optional)
-    pulseMaterial.opacity = 0.5 + (vitals.life / 100) * 0.4;
+    pulseMaterial.opacity = 0.4 + (vitals.life / 100) * 0.5; // Adjusted opacity range
 }
 
-/**
- * Handle window resize events to adjust camera and renderer.
- */
 function onWindowResize() {
     if (!camera || !renderer || !dom.canvasContainer) return;
-
     const width = dom.canvasContainer.clientWidth;
     const height = dom.canvasContainer.clientHeight;
-
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
