@@ -221,6 +221,14 @@ function updateCarousel() {
         div.title = challenge.name;
         // Use cached icon preview
         const iconCanvas = renderIconPreview(idx);
+        // Apply matching glow for selected item
+        if (idx === currentIndex) {
+            iconCanvas.style.filter = 'drop-shadow(0 0 16px #FFB400) drop-shadow(0 0 32px #FFB400)';
+            div.style.boxShadow = '0 0 32px 8px #FFB400, 0 0 8px 2px #fff inset';
+        } else {
+            iconCanvas.style.filter = challenge.unlocked ? 'drop-shadow(0 0 8px #FFB400)' : 'grayscale(1) opacity(0.5)';
+            div.style.boxShadow = '0 0 16px 2px #000';
+        }
         div.appendChild(iconCanvas);
         carouselItemsDiv.appendChild(div);
     });
