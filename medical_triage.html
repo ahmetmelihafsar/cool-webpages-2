@@ -1,0 +1,42 @@
+<!-- /medical_triage.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Triage</title>
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/medical_triage.css">
+</head>
+<body>
+    <header>
+        <h1>Medical Triage</h1>
+        <nav>
+            <a href="index.html" id="back-to-index">&larr; Back to Dashboard</a>
+        </nav>
+    </header>
+    <main id="triage-dashboard">
+        <div id="patient-list-container">
+            <h2>Patient Queue</h2>
+            <ul id="patient-list">
+                <!-- Populated by JS -->
+            </ul>
+        </div>
+        <div id="patient-details-3d">
+            <canvas id="vitals-canvas"></canvas>
+        </div>
+        <div id="patient-info-panel">
+            <h2>Patient Details (ID: <span id="patient-id-display"></span>)</h2>
+            <div id="vitals-text"></div>
+            <div id="logs"></div>
+        </div>
+    </main>
+    <footer>
+        <span>&copy; 2025 STEM Tactical Interface</span>
+    </footer>
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/medical_triage.js"></script>
+</body>
+</html>

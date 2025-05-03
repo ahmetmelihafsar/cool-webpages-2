@@ -1,0 +1,216 @@
+/* styles/medical_triage.css */
+
+/* Layout for triage dashboard */
+#triage-dashboard {
+    display: grid;
+    grid-template-columns: 1.1fr 2fr 1.2fr;
+    grid-template-areas: 
+        "list 3d info";
+    gap: 2rem;
+    height: 85vh;
+    padding: 2rem 2vw;
+    background: var(--color-background, #050505);
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Patient List Panel */
+#patient-list-container {
+    grid-area: list;
+    background: rgba(10, 10, 10, 0.98);
+    border: 2px solid var(--color-primary-accent, #FFB400);
+    border-radius: 12px;
+    padding: 1.2rem 1rem;
+    min-width: 220px;
+    box-shadow: 0 0 16px #FFB40033;
+    font-family: var(--font-primary, 'Roboto Mono', monospace);
+}
+
+#patient-list-container h2 {
+    color: var(--color-primary-accent, #FFB400);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+}
+
+#patient-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.patient-item {
+    background: #111;
+    color: var(--color-primary-text, #f0f0f0);
+    border-left: 5px solid var(--color-secondary-text, #a0a0a0);
+    margin-bottom: 0.7rem;
+    padding: 0.7rem 1rem;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 8px #0008;
+}
+
+.patient-item.priority-high {
+    border-left-color: #FF3B3B;
+}
+.patient-item.priority-medium {
+    border-left-color: #FFB400;
+}
+.patient-item.priority-low {
+    border-left-color: #00FFC6;
+}
+
+.patient-item.selected,
+.patient-item:hover {
+    box-shadow: 0 0 12px #FFB40088;
+    border-left-width: 7px;
+    background: #181818;
+}
+
+/* 3D Visualization Panel */
+#patient-details-3d {
+    grid-area: 3d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0a0a0a 80%, #1a1a1a 100%);
+    border: 2px solid var(--color-primary-accent, #FFB400);
+    border-radius: 16px;
+    min-width: 340px;
+    min-height: 420px;
+    position: relative;
+    box-shadow: 0 0 32px #FFB40022;
+}
+
+#vitals-canvas {
+    width: 100%;
+    height: 420px;
+    background: transparent;
+    display: block;
+    border-radius: 12px;
+    outline: none;
+}
+
+/* Info Panel */
+#patient-info-panel {
+    grid-area: info;
+    background: rgba(15, 15, 15, 0.98);
+    border: 2px solid var(--color-primary-accent, #FFB400);
+    border-radius: 12px;
+    padding: 1.2rem 1rem;
+    min-width: 240px;
+    color: var(--color-primary-text, #f0f0f0);
+    font-family: var(--font-primary, 'Roboto Mono', monospace);
+    box-shadow: 0 0 16px #FFB40033;
+}
+
+#patient-info-panel h2 {
+    color: var(--color-primary-accent, #FFB400);
+    font-size: 1.15rem;
+    margin-bottom: 0.8rem;
+}
+
+#vitals-text {
+    margin-bottom: 1.2rem;
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+#logs {
+    font-size: 0.95rem;
+    color: var(--color-secondary-text, #a0a0a0);
+    background: #181818;
+    border-radius: 6px;
+    padding: 0.7rem;
+    min-height: 60px;
+    max-height: 140px;
+    overflow-y: auto;
+    box-shadow: 0 0 8px #FFB40022;
+}
+
+/* Header and Footer */
+header, footer {
+    background: #000;
+    color: var(--color-primary-accent, #FFB400);
+    padding: 0.7rem 2vw;
+    font-family: var(--font-primary, 'Roboto Mono', monospace);
+    letter-spacing: 1px;
+    border-bottom: 1px solid #222;
+}
+
+header nav a {
+    color: var(--color-primary-accent, #FFB400);
+    text-decoration: none;
+    font-weight: bold;
+    margin-left: 1.5rem;
+    transition: text-shadow 0.2s;
+}
+
+header nav a:hover {
+    text-shadow: 0 0 8px #FFB400;
+}
+
+footer {
+    border-top: 1px solid #222;
+    text-align: center;
+    font-size: 0.95rem;
+    margin-top: 2rem;
+    background: #050505;
+}
+
+/* Cinematic Letterbox */
+body::before, body::after {
+    content: "";
+    display: block;
+    position: fixed;
+    left: 0; right: 0;
+    height: 32px;
+    background: #000;
+    z-index: 100;
+    pointer-events: none;
+}
+body::before { top: 0; }
+body::after { bottom: 0; }
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    background: #181818;
+}
+::-webkit-scrollbar-thumb {
+    background: #FFB40055;
+    border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1100px) {
+    #triage-dashboard {
+        grid-template-columns: 1fr 2fr;
+        grid-template-areas: 
+            "list 3d"
+            "info 3d";
+        gap: 1.2rem;
+    }
+    #patient-info-panel {
+        min-width: 160px;
+    }
+}
+@media (max-width: 800px) {
+    #triage-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        height: auto;
+    }
+    #patient-list-container,
+    #patient-details-3d,
+    #patient-info-panel {
+        min-width: unset;
+        width: 100%;
+    }
+    #vitals-canvas {
+        height: 260px;
+    }
+}
