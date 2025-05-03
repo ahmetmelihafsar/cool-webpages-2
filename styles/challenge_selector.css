@@ -1,0 +1,232 @@
+/* styles/challenge_selector.css */
+
+/* Path: styles/challenge_selector.css */
+
+/* Base layout and theme */
+body, html {
+    background: var(--color-background, #050505);
+    color: var(--color-primary-text, #f0f0f0);
+    font-family: var(--font-primary, 'Roboto Mono', monospace);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+header, footer {
+    text-align: center;
+    padding: 1rem 0;
+    background: rgba(10, 10, 10, 0.95);
+    border-bottom: 1px solid var(--color-primary-accent, #FFB400);
+    letter-spacing: 0.05em;
+}
+
+header nav {
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    color: var(--color-primary-accent, #FFB400);
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.2s;
+}
+.nav-link:hover {
+    color: #fff;
+    text-shadow: 0 0 8px var(--color-primary-accent, #FFB400);
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 80vh;
+    padding: 2rem 0 1rem 0;
+    position: relative;
+}
+
+#challenge-canvas {
+    display: block;
+    margin: 0 auto 2rem auto;
+    background: transparent;
+    width: 600px;
+    height: 220px;
+    border-radius: 12px;
+    box-shadow: 0 0 32px 4px #000, 0 0 24px 2px var(--color-primary-accent, #FFB400) inset;
+}
+
+#carousel-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    width: 100%;
+    max-width: 700px;
+    position: relative;
+}
+
+#carousel-left, #carousel-right {
+    background: none;
+    border: 2px solid var(--color-primary-accent, #FFB400);
+    color: var(--color-primary-accent, #FFB400);
+    font-size: 2rem;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    margin: 0 1rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 8px 2px #000;
+}
+#carousel-left:hover, #carousel-right:hover {
+    background: var(--color-primary-accent, #FFB400);
+    color: #000;
+    box-shadow: 0 0 16px 4px var(--color-primary-accent, #FFB400);
+}
+
+#carousel-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 420px;
+    height: 120px;
+    background: rgba(20, 20, 20, 0.85);
+    border-radius: 16px;
+    box-shadow: 0 0 24px 2px var(--color-primary-accent, #FFB400) inset;
+    overflow: hidden;
+}
+
+#carousel-items {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    gap: 32px;
+    z-index: 1;
+}
+
+.carousel-item {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 0 16px 2px #000;
+    cursor: pointer;
+    position: relative;
+}
+.carousel-item.selected,
+.carousel-item:focus {
+    box-shadow: 0 0 24px 8px var(--color-primary-accent, #FFB400), 0 0 8px 2px #fff inset;
+    transform: scale(1.15);
+    z-index: 2;
+}
+
+#carousel-highlight {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 84px;
+    height: 84px;
+    transform: translate(-50%, -50%);
+    border: 2.5px solid var(--color-primary-accent, #FFB400);
+    border-radius: 50%;
+    box-shadow: 0 0 32px 8px var(--color-primary-accent, #FFB400), 0 0 8px 2px #fff inset;
+    pointer-events: none;
+    z-index: 2;
+    transition: box-shadow 0.3s;
+    animation: highlight-glow 1.2s infinite alternate;
+}
+
+@keyframes highlight-glow {
+    0% { box-shadow: 0 0 32px 8px var(--color-primary-accent, #FFB400), 0 0 8px 2px #fff inset; }
+    100% { box-shadow: 0 0 48px 16px var(--color-primary-accent, #FFB400), 0 0 16px 4px #fff inset; }
+}
+
+#challenge-label-area {
+    margin: 1.2rem 0 0.5rem 0;
+    text-align: center;
+    min-height: 2.5em;
+}
+
+#challenge-label {
+    font-size: 1.5rem;
+    color: var(--color-primary-accent, #FFB400);
+    text-shadow: 0 0 12px var(--color-primary-accent, #FFB400), 0 0 2px #fff;
+    opacity: 0;
+    transition: opacity 0.5s;
+    font-family: inherit;
+    letter-spacing: 0.04em;
+}
+
+#challenge-label.visible {
+    opacity: 1;
+}
+
+#timeline-scrubber-container {
+    width: 420px;
+    margin: 0.5rem auto 1.5rem auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#timeline-scrubber {
+    width: 100%;
+    accent-color: var(--color-primary-accent, #FFB400);
+    background: linear-gradient(90deg, #222 0%, var(--color-primary-accent, #FFB400) 100%);
+    border-radius: 8px;
+    height: 6px;
+    outline: none;
+    transition: box-shadow 0.2s;
+    box-shadow: 0 0 8px 2px var(--color-primary-accent, #FFB400) inset;
+}
+#timeline-scrubber::-webkit-slider-thumb {
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-primary-accent, #FFB400);
+    box-shadow: 0 0 12px 4px var(--color-primary-accent, #FFB400);
+    border: 2px solid #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#timeline-scrubber::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--color-primary-accent, #FFB400);
+    box-shadow: 0 0 12px 4px var(--color-primary-accent, #FFB400);
+    border: 2px solid #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#timeline-scrubber:focus {
+    box-shadow: 0 0 16px 4px var(--color-primary-accent, #FFB400);
+}
+
+footer {
+    text-align: center;
+    padding: 0.7rem 0;
+    background: rgba(10, 10, 10, 0.97);
+    border-top: 1px solid var(--color-primary-accent, #FFB400);
+    font-size: 1rem;
+    color: var(--color-secondary-text, #a0a0a0);
+    letter-spacing: 0.03em;
+}
+
+/* Subtle geometric background pattern (optional) */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    opacity: 0.08;
+    background: repeating-linear-gradient(135deg, #FFB400 0 2px, transparent 2px 40px);
+    z-index: 0;
+}

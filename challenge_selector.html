@@ -1,0 +1,47 @@
+<!-- /challenge_selector.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Selector</title>
+    <!-- Global and page-specific styles -->
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/challenge_selector.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="index.html" class="nav-link">&#8592; Back to Home</a>
+        </nav>
+        <h1>Challenge Selector</h1>
+    </header>
+    <main>
+        <!-- Three.js canvas for geometric icons -->
+        <canvas id="challenge-canvas"></canvas>
+        <!-- Carousel for challenge icons -->
+        <section id="carousel-section">
+            <button id="carousel-left" aria-label="Previous Challenge">&#8592;</button>
+            <div id="carousel-container">
+                <!-- Carousel items rendered by JS as glowing line-loops -->
+                <div id="carousel-highlight"></div>
+                <div id="carousel-items"></div>
+            </div>
+            <button id="carousel-right" aria-label="Next Challenge">&#8594;</button>
+        </section>
+        <!-- Challenge label and timeline scrubber -->
+        <div id="challenge-label-area">
+            <span id="challenge-label"></span>
+        </div>
+        <div id="timeline-scrubber-container">
+            <input type="range" id="timeline-scrubber" min="0" max="100" value="0">
+        </div>
+    </main>
+    <footer>
+        <span>Project Watch Dogs UI &mdash; Challenge Selector</span>
+    </footer>
+    <!-- Global and page-specific scripts -->
+    <script src="js/main.js"></script>
+    <script src="js/challenge_selector.js"></script>
+</body>
+</html>
