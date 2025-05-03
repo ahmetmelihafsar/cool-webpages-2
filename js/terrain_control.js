@@ -327,7 +327,7 @@ function createWaypointMarker(type, position) {
     group.add(sprite);
 
     group.position.copy(position);
-    group.position.z += 1.2;
+    // Remove redundant z offset on group to prevent doubling effect
     return group;
 }
 
