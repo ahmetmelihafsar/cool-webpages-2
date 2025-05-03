@@ -16,9 +16,16 @@
 /** @typedef {import('three')} THREE */
 
 let scene, camera, renderer, terrainMesh, wireframeMesh;
+let cursorMesh = null;
+let axesHelper = null;
+let markers = [];
 let currentMode = "thermal";
 const TERRAIN_SIZE = 100;
 const TERRAIN_SEGMENTS = 64;
+let currentHeights = null;
+let raycaster = null;
+let mouse = null;
+let canvasBounds = null;
 
 /**
  * Generate a procedural heightmap using Perlin-like noise.
@@ -120,8 +127,8 @@ function initThree() {
     scene.add(directional);
 
     // Terrain
-    const heights = generateHeightmap();
-    terrainMesh = createTerrainMesh(heights);
+    currentHeights = generateHeightmap();
+    terrainMesh = createTerrainMesh(currentHeights);
     terrainMesh.rotation.x = -Math.PI / 2;
     scene.add(terrainMesh);
 
@@ -129,6 +136,22 @@ function initThree() {
     wireframeMesh = createWireframe(terrainMesh.geometry);
     wireframeMesh.rotation.x = -Math.PI / 2;
     scene.add(wireframeMesh);
+
+    // Axes Helper (optional)
+    axesHelper = new THREE.AxesHelper(20);
+    axesHelper.position.set(0, 0, 2);
+    scene.add(axesHelper);
+
+    // 3D Cursor
+    cursorMesh = createCursorMesh();
+    scene.add(cursorMesh);
+
+    // Raycaster for cursor and drop
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
+
+    // Markers array
+    markers = [];
 
     animate();
 }
@@ -138,9 +161,6 @@ function initThree() {
  */
 function animate() {
     requestAnimationFrame(animate);
-    // Subtle rotation for effect
-    terrainMesh.rotation.z += 0.001;
-    wireframeMesh.rotation.z += 0.001;
     renderer.render(scene, camera);
 }
 
@@ -189,17 +209,29 @@ function setupWaypointDragDrop() {
         });
     });
 
-    // Stub: Canvas drop event
+    // Canvas drag/drop
     const canvas = document.getElementById('terrain-canvas');
     canvas.addEventListener('dragover', (e) => {
         e.preventDefault();
     });
     canvas.addEventListener('drop', (e) => {
         e.preventDefault();
-        // Stub: Get drop position and icon type
         const type = e.dataTransfer.getData('text/plain');
-        // Highlight or place marker (not implemented)
-        alert(`Dropped waypoint: ${type} (stub)`);
+        // Get mouse position relative to canvas
+        canvasBounds = canvas.getBoundingClientRect();
+        const x = ((e.clientX - canvasBounds.left) / canvas.width) * 2 - 1;
+        const y = -((e.clientY - canvasBounds.top) / canvas.height) * 2 + 1;
+        mouse.set(x, y);
+        raycaster.setFromCamera(mouse, camera);
+
+        // Intersect with terrain
+        const intersects = raycaster.intersectObject(terrainMesh);
+        if (intersects.length > 0) {
+            const point = intersects[0].point;
+            const marker = createWaypointMarker(type, point);
+            scene.add(marker);
+            markers.push(marker);
+        }
     });
 }
 
@@ -213,12 +245,111 @@ function setupMockInfo() {
 }
 
 /**
+ * Create a 3D cursor mesh (amber ring).
+ * @returns {THREE.Mesh}
+ */
+function createCursorMesh() {
+    const geometry = new THREE.TorusGeometry(1.5, 0.15, 12, 32);
+    const material = new THREE.MeshBasicMaterial({
+        color: 0xFFB400,
+        opacity: 0.85,
+        transparent: true
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.visible = false;
+    return mesh;
+}
+
+/**
+ * Create a marker mesh for a waypoint.
+ * @param {string} type - triangle, square, circle
+ * @param {THREE.Vector3} position
+ * @returns {THREE.Mesh}
+ */
+function createWaypointMarker(type, position) {
+    let geometry, material;
+    material = new THREE.MeshBasicMaterial({
+        color: 0xFFB400,
+        transparent: false
+    });
+    switch (type) {
+        case "triangle":
+            geometry = new THREE.ConeGeometry(1.2, 2.5, 3);
+            break;
+        case "square":
+            geometry = new THREE.BoxGeometry(2, 2, 2);
+            break;
+        case "circle":
+        default:
+            geometry = new THREE.SphereGeometry(1.2, 24, 16);
+            break;
+    }
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.copy(position);
+    mesh.position.z += 1.2;
+    return mesh;
+}
+
+/**
+ * Update the 3D cursor position based on mouse movement.
+ */
+function setupCursorSupport() {
+    const canvas = document.getElementById('terrain-canvas');
+    canvas.addEventListener('mousemove', (e) => {
+        canvasBounds = canvas.getBoundingClientRect();
+        const x = ((e.clientX - canvasBounds.left) / canvas.width) * 2 - 1;
+        const y = -((e.clientY - canvasBounds.top) / canvas.height) * 2 + 1;
+        mouse.set(x, y);
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersects = raycaster.intersectObject(terrainMesh);
+        if (intersects.length > 0) {
+            const point = intersects[0].point;
+            cursorMesh.position.copy(point);
+            cursorMesh.position.z += 1.1;
+            cursorMesh.visible = true;
+        } else {
+            cursorMesh.visible = false;
+        }
+    });
+    canvas.addEventListener('mouseleave', () => {
+        cursorMesh.visible = false;
+    });
+}
+
+/**
+ * Regenerate terrain and update all meshes.
+ */
+function setupRegenerateButton() {
+    const btn = document.getElementById('regenerate-terrain');
+    btn.addEventListener('click', () => {
+        // Remove old terrain and wireframe
+        scene.remove(terrainMesh);
+        scene.remove(wireframeMesh);
+        // Remove all markers
+        markers.forEach(m => scene.remove(m));
+        markers = [];
+        // Generate new heightmap and meshes
+        currentHeights = generateHeightmap();
+        terrainMesh = createTerrainMesh(currentHeights);
+        terrainMesh.rotation.x = -Math.PI / 2;
+        scene.add(terrainMesh);
+
+        wireframeMesh = createWireframe(terrainMesh.geometry);
+        wireframeMesh.rotation.x = -Math.PI / 2;
+        scene.add(wireframeMesh);
+    });
+}
+
+/**
  * Initialize all UI controls and Three.js scene.
  */
 function init() {
     initThree();
     setupModeToggles();
     setupWaypointDragDrop();
+    setupCursorSupport();
+    setupRegenerateButton();
     setupMockInfo();
 }
 

@@ -179,3 +179,24 @@ nav a:hover {
     border-bottom: 2px solid var(--color-primary-accent);
   }
 }
+/* Accent button for terrain regeneration */
+.accent-btn {
+  background: var(--color-primary-accent);
+  color: #181818;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-primary);
+  font-size: 1.1em;
+  font-weight: bold;
+  padding: 12px 20px;
+  margin-top: 24px;
+  cursor: pointer;
+  box-shadow: 0 0 12px 2px var(--color-primary-accent);
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  letter-spacing: 1px;
+}
+.accent-btn:hover {
+  background: #fff;
+  color: var(--color-primary-accent);
+  box-shadow: 0 0 24px 4px var(--color-primary-accent);
+}
