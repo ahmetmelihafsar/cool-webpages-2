@@ -339,6 +339,10 @@ function setupActionButtons() {
 
 /// --- Three.js Visualization ---
 
+/**
+ * Initialize Three.js scene for the triage canvas.
+ * Adds mobile-friendly controls, robust resizing, and touch-action CSS.
+ */
 function initThreeScene() {
     if (typeof THREE === "undefined") {
         console.error("Three.js library not loaded!");
@@ -355,23 +359,46 @@ function initThreeScene() {
         return;
     }
 
+    // Responsive canvas sizing for all devices and orientation changes
+    function resizeCanvas() {
+        const parent = dom.canvasContainer;
+        if (parent) {
+            dom.triageCanvas.width = parent.clientWidth;
+            dom.triageCanvas.height = parent.clientHeight;
+        } else {
+            dom.triageCanvas.width = dom.triageCanvas.clientWidth || 600;
+            dom.triageCanvas.height = dom.triageCanvas.clientHeight || 400;
+        }
+        if (renderer && camera) {
+            renderer.setSize(dom.triageCanvas.width, dom.triageCanvas.height, false);
+            camera.aspect = dom.triageCanvas.width / dom.triageCanvas.height;
+            camera.updateProjectionMatrix();
+        }
+    }
+
     renderer = new THREE.WebGLRenderer({ canvas: dom.triageCanvas, alpha: true, antialias: true });
     renderer.setClearColor(0x000000, 0);
     renderer.setSize(dom.canvasContainer.clientWidth, dom.canvasContainer.clientHeight);
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, dom.canvasContainer.clientWidth / dom.canvasContainer.clientHeight, 0.1, 1000);
-    camera.position.set(0, 1, 7); // Slightly adjusted camera position
-    camera.lookAt(0, 0, 0); // Ensure camera looks at the center
+    camera.position.set(0, 1, 7);
+    camera.lookAt(0, 0, 0);
 
-    // Initialize OrbitControls
+    // Initialize OrbitControls, tuned for mobile
     controls = new THREE.OrbitControls(camera, dom.triageCanvas);
-    controls.enableDamping = true; // Add smooth damping
-    controls.dampingFactor = 0.05;
-    controls.rotateSpeed = 0.5;
-    controls.enablePan = false; // Disable panning for medical view
-    controls.minDistance = 5; // Set minimum zoom
-    controls.maxDistance = 15; // Set maximum zoom
+    controls.enableDamping = true;
+    controls.dampingFactor = window.innerWidth < 900 ? 0.12 : 0.05;
+    controls.rotateSpeed = window.innerWidth < 900 ? 0.7 : 0.5;
+    controls.enablePan = false;
+    controls.minDistance = 5;
+    controls.maxDistance = 15;
+    dom.triageCanvas.style.touchAction = "pan-x pan-y";
+
+    // Listen for resize and orientation changes
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', resizeCanvas);
+    resizeCanvas();
 
     // Initialize AxesHelper
     axesHelper = new THREE.AxesHelper(3);
@@ -385,28 +412,28 @@ function initThreeScene() {
     scene.add(camera);
 
     // Use high-resolution Icosahedron for a more detailed "tech" look
-    const geometry = new THREE.IcosahedronGeometry(2, 3); // Increased detail level from 1 to 3
+    const geometry = new THREE.IcosahedronGeometry(2, 3);
     pulseMaterial = new THREE.MeshPhongMaterial({
         color: 0xFFB400,
         wireframe: true,
         transparent: true,
         opacity: 0.7,
-        shininess: 60 // Increased shininess
+        shininess: 60
     });
     mesh = new THREE.Mesh(geometry, pulseMaterial);
     scene.add(mesh);
 
     // Particle effect
     const particles = new THREE.BufferGeometry();
-    const particleCount = 600; // More particles
+    const particleCount = 600;
     const positions = [];
-    const sphereRadius = 2.8; // Wider particle cloud
+    const sphereRadius = 2.8;
     for (let i = 0; i < particleCount; i++) {
         const u = Math.random();
         const v = Math.random();
         const theta = 2 * Math.PI * u;
         const phi = Math.acos(2 * v - 1);
-        const r = sphereRadius + (Math.random() - 0.5) * 0.8; // More depth
+        const r = sphereRadius + (Math.random() - 0.5) * 0.8;
         positions.push(
             r * Math.sin(phi) * Math.cos(theta),
             r * Math.sin(phi) * Math.sin(theta),
@@ -416,8 +443,8 @@ function initThreeScene() {
     particles.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     const particleMaterial = new THREE.PointsMaterial({
         color: 0xFFB400,
-        size: 0.05, // Slightly smaller points
-        opacity: 0.5, // More subtle
+        size: 0.05,
+        opacity: 0.5,
         transparent: true,
         sizeAttenuation: true
     });

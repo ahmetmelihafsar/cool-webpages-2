@@ -33,6 +33,7 @@ main {
   height: 100%;
   position: relative;
   border-right: 2px solid var(--color-primary-accent);
+  min-width: 0;
 }
 
 #terrain-canvas {
@@ -43,6 +44,10 @@ main {
   border: none;
   outline: none;
   box-shadow: 0 0 32px 0 #1a1a1a inset;
+  border-radius: 8px;
+  touch-action: pan-x pan-y;
+  max-width: 100vw;
+  max-height: 80vh;
 }
 
 #terrain-controls {
@@ -57,6 +62,7 @@ main {
   box-sizing: border-box;
   height: 100%;
   gap: 32px;
+  border-radius: 0 0 0 16px;
 }
 
 .mode-toggles label {
@@ -65,11 +71,20 @@ main {
   margin-right: 16px;
   letter-spacing: 1px;
   cursor: pointer;
+  font-size: 1.1em;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  user-select: none;
 }
 
 .mode-toggles input[type="radio"] {
   accent-color: var(--color-primary-accent);
   margin-right: 4px;
+  width: 22px;
+  height: 22px;
 }
 
 .waypoints h2 {
@@ -83,18 +98,23 @@ main {
   display: flex;
   gap: 16px;
   margin-bottom: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .waypoint-icon {
-  font-size: 2em;
+  font-size: 2.2em;
   color: var(--color-primary-accent);
   background: #181818;
   border: 2px solid var(--color-primary-accent);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 12px 16px;
   cursor: grab;
   transition: box-shadow 0.2s, background 0.2s;
   user-select: none;
+  min-width: 56px;
+  min-height: 56px;
+  touch-action: manipulation;
 }
 
 .waypoint-icon:hover, .waypoint-icon.dragging {
@@ -158,10 +178,12 @@ nav a:hover {
   text-shadow: 0 0 8px var(--color-primary-accent);
 }
 
+/* Tablet/mobile: bottom sheet controls, portrait scaling */
 @media (max-width: 900px) {
   main {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 320px;
+    height: auto;
   }
   #terrain-controls {
     flex-direction: row;
@@ -173,12 +195,48 @@ nav a:hover {
     gap: 24px;
     border-left: none;
     border-top: 2px solid var(--color-primary-accent);
+    border-radius: 0 0 16px 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    align-items: flex-start;
   }
   #terrain-container {
     border-right: none;
     border-bottom: 2px solid var(--color-primary-accent);
+    min-height: 220px;
+    max-height: 60vh;
+  }
+  #terrain-canvas {
+    max-height: 60vw;
+    min-height: 220px;
+    border-radius: 0 0 16px 16px;
   }
 }
+
+/* Small mobile: tighter controls, scrollable bottom sheet */
+@media (max-width: 600px) {
+  #terrain-controls {
+    flex-direction: row;
+    gap: 12px;
+    padding: 8px 2vw;
+    height: 180px;
+    font-size: 0.98em;
+    border-radius: 0 0 18px 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .waypoint-icon {
+    font-size: 1.6em;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 8px 8px;
+  }
+  #terrain-canvas {
+    max-height: 40vw;
+    min-height: 120px;
+  }
+}
+
 /* Accent button for terrain regeneration */
 .accent-btn {
   background: var(--color-primary-accent);
@@ -194,6 +252,9 @@ nav a:hover {
   box-shadow: 0 0 12px 2px var(--color-primary-accent);
   transition: background 0.2s, color 0.2s, box-shadow 0.2s;
   letter-spacing: 1px;
+  min-height: 48px;
+  min-width: 120px;
+  touch-action: manipulation;
 }
 .accent-btn:hover {
   background: #fff;

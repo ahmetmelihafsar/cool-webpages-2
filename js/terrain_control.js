@@ -108,28 +108,59 @@ function createWireframe(geometry) {
 /**
  * Initialize Three.js scene, camera, renderer, and terrain.
  */
+/**
+ * Initialize Three.js scene, camera, renderer, and terrain.
+ * Adds mobile-friendly controls and responsive canvas resizing.
+ */
 function initThree() {
     const canvas = document.getElementById('terrain-canvas');
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setClearColor(0x050505);
-    renderer.setSize(canvas.clientWidth || 800, canvas.clientHeight || 600, false);
+
+    /**
+     * Responsive canvas resizing for all devices and orientation changes.
+     */
+    function resizeCanvas() {
+        const parent = canvas.parentElement;
+        if (parent) {
+            canvas.width = parent.clientWidth;
+            canvas.height = parent.clientHeight;
+        } else {
+            canvas.width = canvas.clientWidth || 800;
+            canvas.height = canvas.clientHeight || 600;
+        }
+        renderer.setSize(canvas.width, canvas.height, false);
+        if (camera) {
+            camera.aspect = canvas.width / canvas.height;
+            camera.updateProjectionMatrix();
+        }
+    }
+    resizeCanvas();
 
     scene = new THREE.Scene();
 
-    camera = new THREE.PerspectiveCamera(45, (canvas.clientWidth || 800) / (canvas.clientHeight || 600), 1, 500);
+    camera = new THREE.PerspectiveCamera(45, (canvas.width) / (canvas.height), 1, 500);
     camera.position.set(0, -80, 60);
     camera.lookAt(0, 0, 0);
 
-    // OrbitControls for camera navigation
+    // OrbitControls for camera navigation, tuned for mobile
     if (THREE.OrbitControls) {
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
-        controls.dampingFactor = 0.08;
+        controls.dampingFactor = window.innerWidth < 900 ? 0.12 : 0.08;
         controls.screenSpacePanning = false;
         controls.minDistance = 30;
         controls.maxDistance = 200;
         controls.maxPolarAngle = Math.PI / 2;
+        controls.rotateSpeed = window.innerWidth < 900 ? 0.7 : 1.0;
+        controls.zoomSpeed = window.innerWidth < 900 ? 0.7 : 1.0;
+        controls.enablePan = false;
+        renderer.domElement.style.touchAction = "pan-x pan-y";
     }
+
+    // Listen for resize and orientation changes
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', resizeCanvas);
 
     // Lights
     const ambient = new THREE.AmbientLight(0xffffff, 0.5);
@@ -204,9 +235,13 @@ function setupModeToggles() {
 /**
  * Stub: Drag-and-drop waypoint icons.
  */
+/**
+ * Setup drag-and-drop for waypoints, including touch support for mobile.
+ */
 function setupWaypointDragDrop() {
     const icons = document.querySelectorAll('.waypoint-icon');
     icons.forEach(icon => {
+        // Mouse drag events
         icon.addEventListener('dragstart', (e) => {
             icon.classList.add('dragging');
             e.dataTransfer.setData('text/plain', icon.dataset.type);
@@ -220,9 +255,65 @@ function setupWaypointDragDrop() {
         icon.addEventListener('mouseleave', () => {
             icon.classList.remove('hover');
         });
+
+        // Touch drag events for mobile
+        let touchDrag = false;
+        let touchIcon = null;
+        icon.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            touchDrag = true;
+            icon.classList.add('dragging');
+            // Clone icon for visual feedback
+            touchIcon = icon.cloneNode(true);
+            touchIcon.style.position = 'fixed';
+            touchIcon.style.pointerEvents = 'none';
+            touchIcon.style.opacity = '0.8';
+            touchIcon.style.zIndex = '9999';
+            document.body.appendChild(touchIcon);
+            moveTouchIcon(e.touches[0]);
+        });
+        icon.addEventListener('touchmove', (e) => {
+            if (!touchDrag || !touchIcon) return;
+            moveTouchIcon(e.touches[0]);
+        });
+        icon.addEventListener('touchend', (e) => {
+            if (!touchDrag) return;
+            icon.classList.remove('dragging');
+            if (touchIcon) {
+                document.body.removeChild(touchIcon);
+                touchIcon = null;
+            }
+            touchDrag = false;
+            // Drop marker if over canvas
+            const touch = e.changedTouches[0];
+            const canvas = document.getElementById('terrain-canvas');
+            const rect = canvas.getBoundingClientRect();
+            if (
+                touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                touch.clientY >= rect.top && touch.clientY <= rect.bottom
+            ) {
+                // Convert to normalized device coordinates
+                const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+                const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+                mouse.set(x, y);
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObject(terrainMesh);
+                if (intersects.length > 0) {
+                    const point = intersects[0].point;
+                    const marker = createWaypointMarker(icon.dataset.type, point);
+                    scene.add(marker);
+                    markers.push(marker);
+                }
+            }
+        });
+        function moveTouchIcon(touch) {
+            if (!touchIcon) return;
+            touchIcon.style.left = (touch.clientX - 24) + 'px';
+            touchIcon.style.top = (touch.clientY - 24) + 'px';
+        }
     });
 
-    // Canvas drag/drop
+    // Canvas drag/drop (mouse)
     const canvas = document.getElementById('terrain-canvas');
     canvas.addEventListener('dragover', (e) => {
         e.preventDefault();

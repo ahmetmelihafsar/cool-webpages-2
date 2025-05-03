@@ -365,6 +365,9 @@ function onCarouselItemClick(e) {
 /**
  * Set up event listeners for navigation and scrubbing.
  */
+/**
+ * Set up event handlers for navigation, scrubbing, and touch swipe.
+ */
 function setupEventHandlers() {
     document.getElementById('carousel-left').addEventListener('click', () => navigateCarousel(-1));
     document.getElementById('carousel-right').addEventListener('click', () => navigateCarousel(1));
@@ -383,6 +386,62 @@ function setupEventHandlers() {
             navigateCarousel(1);
         }
     });
+
+    // Touch swipe support for carousel
+    const carouselSection = document.getElementById('carousel-section');
+    let touchStartX = null;
+    let touchStartY = null;
+    let touchMoved = false;
+    carouselSection.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchMoved = false;
+        }
+    });
+    carouselSection.addEventListener('touchmove', function(e) {
+        if (touchStartX === null) return;
+        const dx = e.touches[0].clientX - touchStartX;
+        const dy = e.touches[0].clientY - touchStartY;
+        if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+            if (dx > 0) {
+                navigateCarousel(-1);
+            } else {
+                navigateCarousel(1);
+            }
+            touchStartX = null;
+            touchMoved = true;
+        }
+    });
+    carouselSection.addEventListener('touchend', function() {
+        touchStartX = null;
+        touchStartY = null;
+        touchMoved = false;
+    });
+
+    // Responsive canvas resizing
+    function resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const parent = canvas.parentElement;
+        let width = 600, height = 220;
+        if (parent) {
+            width = Math.max(120, Math.min(parent.clientWidth, 700));
+            height = Math.max(60, Math.round(width * 0.36));
+        }
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        if (renderer && camera) {
+            renderer.setPixelRatio(dpr);
+            renderer.setSize(width, height, false);
+            camera.aspect = width / height;
+            camera.updateProjectionMatrix();
+        }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('orientationchange', resizeCanvas);
+    resizeCanvas();
 }
 
 /**

@@ -7,47 +7,127 @@
     box-sizing: border-box;
 }
 
-/* Define core theme variables based on frontend_plan.md */
+/* Define core theme variables and breakpoints */
 :root {
-  --color-background: #050505; /* Near-black background */
-  --color-primary-accent: #FFB400; /* Neon Amber accent */
-  --color-secondary-text: #a0a0a0; /* Grayscale for secondary info */
-  --color-primary-text: #f0f0f0; /* Primary text color */
-  --font-primary: 'Roboto Mono', monospace; /* Monospace font */
+    /* Colors */
+    --color-background: #050505; /* Near-black background */
+    --color-primary-accent: #FFB400; /* Neon Amber accent */
+    --color-secondary-text: #a0a0a0; /* Grayscale for secondary info */
+    --color-primary-text: #f0f0f0; /* Primary text color */
+    --font-primary: 'Roboto Mono', monospace; /* Monospace font */
+    
+    /* Spacing */
+    --spacing-unit: clamp(0.5rem, 2vw, 1.5rem);
+    --container-padding: clamp(1rem, 5vw, 2rem);
+    
+    /* Typography */
+    --font-size-base: clamp(1rem, 2.5vw, 1.2rem);
+    --font-size-h1: clamp(1.5rem, 4vw, 2.5rem);
+    --font-size-nav: clamp(0.875rem, 2vw, 1rem);
+    
+    /* Touch targets */
+    --touch-target-size: clamp(2.5rem, 8vw, 3rem);
+    
+    /* Layout */
+    --max-width: 1440px;
+    --mobile-breakpoint: 768px;
 }
 
-/* Apply base styles to the body */
+/* Mobile-first base styles */
+html {
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
 body {
-  background-color: var(--color-background);
-  color: var(--color-primary-text);
-  font-family: var(--font-primary);
-  /* Prevent scrollbars unless necessary within components (as per plan) */
-  overflow: hidden;
-  /* Add some padding for basic layout */
-  padding: 20px;
+    background-color: var(--color-background);
+    color: var(--color-primary-text);
+    font-family: var(--font-primary);
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    padding: var(--container-padding);
+    /* Enable scrolling on mobile */
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Basic styling for the navigation links (can be refined later) */
+/* Navigation with touch-friendly targets */
 nav ul {
     list-style: none;
-    padding: 20px 0;
+    padding: var(--spacing-unit) 0;
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 0.5);
 }
 
 nav ul li {
-    margin-bottom: 10px;
+    margin: 0;
 }
 
 nav ul li a {
     color: var(--color-primary-accent);
     text-decoration: none;
     transition: color 0.3s ease;
+    display: block;
+    padding: calc(var(--spacing-unit) * 0.5);
+    font-size: var(--font-size-nav);
+    /* Ensure touch targets are large enough */
+    min-height: var(--touch-target-size);
+    display: flex;
+    align-items: center;
 }
 
-nav ul li a:hover {
-    color: var(--color-primary-text);
+/* Remove hover effects on touch devices */
+@media (hover: hover) {
+    nav ul li a:hover {
+        color: var(--color-primary-text);
+    }
+}
+
+/* Active states for touch feedback */
+nav ul li a:active {
+    background-color: rgba(255, 180, 0, 0.1);
 }
 
 h1 {
     color: var(--color-primary-accent);
-    margin-bottom: 20px;
+    font-size: var(--font-size-h1);
+    margin-bottom: var(--spacing-unit);
+    line-height: 1.2;
+}
+
+/* Tablet and desktop enhancements */
+@media screen and (min-width: 768px) {
+    nav ul {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    body {
+        overflow: hidden; /* Restore desktop behavior */
+    }
+    
+    nav ul li a {
+        min-height: unset; /* Reset touch target size for desktop */
+    }
+}
+
+/* High-contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --color-primary-accent: #FFD700;
+        --color-secondary-text: #FFFFFF;
+    }
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

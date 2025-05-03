@@ -53,6 +53,11 @@ main {
     height: 220px;
     border-radius: 12px;
     box-shadow: 0 0 32px 4px #000, 0 0 24px 2px var(--color-primary-accent, #FFB400) inset;
+    max-width: 96vw;
+    max-height: 32vw;
+    min-width: 220px;
+    min-height: 120px;
+    touch-action: pan-x pan-y;
 }
 
 #carousel-section {
@@ -63,6 +68,7 @@ main {
     width: 100%;
     max-width: 700px;
     position: relative;
+    gap: 0.5rem;
 }
 
 #carousel-left, #carousel-right {
@@ -77,6 +83,7 @@ main {
     cursor: pointer;
     transition: background 0.2s, color 0.2s, box-shadow 0.2s;
     box-shadow: 0 0 8px 2px #000;
+    touch-action: manipulation;
 }
 #carousel-left:hover, #carousel-right:hover {
     background: var(--color-primary-accent, #FFB400);
@@ -95,6 +102,8 @@ main {
     border-radius: 16px;
     box-shadow: 0 0 24px 2px var(--color-primary-accent, #FFB400) inset;
     overflow: hidden;
+    max-width: 80vw;
+    min-width: 180px;
 }
 
 #carousel-items {
@@ -105,6 +114,9 @@ main {
     height: 100%;
     gap: 32px;
     z-index: 1;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 }
 
 .carousel-item {
@@ -118,6 +130,9 @@ main {
     box-shadow: 0 0 16px 2px #000;
     cursor: pointer;
     position: relative;
+    min-width: 56px;
+    min-height: 56px;
+    touch-action: manipulation;
 }
 .carousel-item.selected,
 .carousel-item:focus {
@@ -165,6 +180,9 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
+    max-width: 80vw;
+    min-width: 180px;
+    gap: 1rem;
 }
 
 #timeline-scrubber {
@@ -176,27 +194,32 @@ main {
     outline: none;
     transition: box-shadow 0.2s;
     box-shadow: 0 0 8px 2px var(--color-primary-accent, #FFB400) inset;
+    min-width: 120px;
+    max-width: 60vw;
+    touch-action: manipulation;
 }
 #timeline-scrubber::-webkit-slider-thumb {
     appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: var(--color-primary-accent, #FFB400);
     box-shadow: 0 0 12px 4px var(--color-primary-accent, #FFB400);
     border: 2px solid #fff;
     cursor: pointer;
     transition: background 0.2s;
+    touch-action: manipulation;
 }
 #timeline-scrubber::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
     background: var(--color-primary-accent, #FFB400);
     box-shadow: 0 0 12px 4px var(--color-primary-accent, #FFB400);
     border: 2px solid #fff;
     cursor: pointer;
     transition: background 0.2s;
+    touch-action: manipulation;
 }
 #timeline-scrubber:focus {
     box-shadow: 0 0 16px 4px var(--color-primary-accent, #FFB400);
@@ -221,4 +244,99 @@ body::before {
     opacity: 0.08;
     background: repeating-linear-gradient(135deg, #FFB400 0 2px, transparent 2px 40px);
     z-index: 0;
+}
+
+/* Tablet/mobile: stack timeline below carousel, scale canvas and controls */
+@media (max-width: 900px) {
+    #challenge-canvas {
+        width: 98vw;
+        height: 28vw;
+        min-width: 120px;
+        min-height: 90px;
+        max-width: 100vw;
+        max-height: 40vw;
+    }
+    #carousel-section {
+        max-width: 98vw;
+        gap: 0.2rem;
+    }
+    #carousel-container {
+        width: 80vw;
+        min-width: 120px;
+        max-width: 98vw;
+        height: 90px;
+    }
+    #timeline-scrubber-container {
+        width: 80vw;
+        min-width: 120px;
+        max-width: 98vw;
+        margin-top: 0.5rem;
+        margin-bottom: 1.2rem;
+    }
+    .carousel-item {
+        width: 48px;
+        height: 48px;
+        min-width: 36px;
+        min-height: 36px;
+        font-size: 1.1em;
+    }
+    #carousel-left, #carousel-right {
+        width: 38px;
+        height: 38px;
+        font-size: 1.5rem;
+        margin: 0 0.5rem;
+    }
+}
+
+/* Small mobile: tighter controls, vertical stacking */
+@media (max-width: 600px) {
+    main {
+        padding: 0.5rem 0 0.5rem 0;
+    }
+    #challenge-canvas {
+        width: 98vw;
+        height: 22vw;
+        min-width: 80px;
+        min-height: 60px;
+        max-width: 100vw;
+        max-height: 30vw;
+    }
+    #carousel-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.1rem;
+        max-width: 100vw;
+    }
+    #carousel-container {
+        width: 98vw;
+        min-width: 80px;
+        max-width: 100vw;
+        height: 64px;
+    }
+    #timeline-scrubber-container {
+        width: 98vw;
+        min-width: 80px;
+        max-width: 100vw;
+        margin-top: 0.2rem;
+        margin-bottom: 0.8rem;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .carousel-item {
+        width: 36px;
+        height: 36px;
+        min-width: 24px;
+        min-height: 24px;
+        font-size: 0.95em;
+    }
+    #carousel-left, #carousel-right {
+        width: 32px;
+        height: 32px;
+        font-size: 1.1rem;
+        margin: 0 0.2rem;
+    }
+    #timeline-scrubber {
+        min-width: 60px;
+        max-width: 90vw;
+    }
 }

@@ -1,17 +1,38 @@
-// /js/global_threat_map.js
-
 /**
- * Requires: js/three.min.js
- * Adds: OrbitControls for navigation, secret menu for spin speed, axes and shading toggles, glow/trail/meridian options.
- * Initializes the Three.js scene for the Global Threat Map.
+ * /js/global_threat_map.js
+ *
+ * Mobile-responsive and touch-friendly Three.js globe for the Global Threat Map.
+ * - Uses THREE.OrbitControls for full touch/pinch/drag support
+ * - Responsive canvas sizing and orientation handling
+ * - Mobile device detection and adaptation
+ * - Docstrings and inline comments for clarity
  */
+
 (function() {
   /** @type {HTMLCanvasElement} */
   const canvas = document.getElementById('globe-canvas');
-  // Responsive sizing
+
+  /**
+   * Utility: Detect if running on a mobile device.
+   * @returns {boolean}
+   */
+  function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+
+  /**
+   * Responsive canvas resizing for all devices and orientation changes.
+   */
   function resizeCanvas() {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+    // Use parent size for fluid scaling
+    const parent = canvas.parentElement;
+    if (parent) {
+      canvas.width = parent.clientWidth;
+      canvas.height = parent.clientHeight;
+    } else {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+    }
   }
   resizeCanvas();
 
@@ -19,7 +40,7 @@
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setClearColor(0x050505, 1);
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+  renderer.setSize(canvas.width, canvas.height, false);
 
   /** @type {THREE.Scene} */
   const scene = new THREE.Scene();
@@ -27,17 +48,35 @@
   /** @type {THREE.PerspectiveCamera} */
   const camera = new THREE.PerspectiveCamera(
     45,
-    canvas.clientWidth / canvas.clientHeight,
+    canvas.width / canvas.height,
     0.1,
     1000
   );
   camera.position.set(0, 0, 180);
 
-  // --- OrbitControls (inline minimal version, vertical fixed) ---
-  function OrbitControls(camera, domElement) {
+  /**
+   * Use THREE.OrbitControls for full mouse/touch/pinch support.
+   * On mobile, increase touch sensitivity and enable damping for smoother gestures.
+   */
+  let controls;
+  if (typeof THREE.OrbitControls !== "undefined") {
+    controls = new THREE.OrbitControls(camera, canvas);
+    controls.enableDamping = isMobile();
+    controls.dampingFactor = isMobile() ? 0.12 : 0.05;
+    controls.enablePan = false;
+    controls.minDistance = 80;
+    controls.maxDistance = 400;
+    controls.rotateSpeed = isMobile() ? 0.7 : 1.0;
+    controls.zoomSpeed = isMobile() ? 0.7 : 1.0;
+    controls.enableZoom = true;
+    controls.screenSpacePanning = false;
+    // Touch-action CSS for smoother gestures
+    canvas.style.touchAction = "pan-x pan-y";
+  } else {
+    // Fallback: minimal controls (desktop only)
     let isDragging = false, lastX = 0, lastY = 0, phi = 0, theta = 0;
     let distance = camera.position.length();
-    domElement.addEventListener('mousedown', (e) => {
+    canvas.addEventListener('mousedown', (e) => {
       isDragging = true; lastX = e.clientX; lastY = e.clientY;
     });
     window.addEventListener('mousemove', (e) => {
@@ -45,12 +84,12 @@
       const dx = e.clientX - lastX, dy = e.clientY - lastY;
       lastX = e.clientX; lastY = e.clientY;
       theta -= dx * 0.01;
-      phi += dy * 0.01; // Invert vertical direction
+      phi += dy * 0.01;
       phi = Math.max(-Math.PI/2 + 0.01, Math.min(Math.PI/2 - 0.01, phi));
       update();
     });
     window.addEventListener('mouseup', () => { isDragging = false; });
-    domElement.addEventListener('wheel', (e) => {
+    canvas.addEventListener('wheel', (e) => {
       distance *= (1 + e.deltaY * 0.001);
       distance = Math.max(80, Math.min(400, distance));
       update();
@@ -63,7 +102,6 @@
     }
     update();
   }
-  OrbitControls(camera, canvas);
 
   // Overlay controls (add glow, trail, bold meridians)
   const overlayControls = document.getElementById('overlay-controls');
