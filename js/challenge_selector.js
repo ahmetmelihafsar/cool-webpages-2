@@ -52,33 +52,111 @@ const previewCanvasCache = [];
 function createIconMesh(idx, highQuality = false) {
     let geometry, material, mesh;
     switch (idx) {
-        case 0: // Hexagon
-            geometry = new THREE.CircleGeometry(1, highQuality ? 48 : 6);
-            break;
-        case 1: // Maze (square spiral)
+        case 0: // Hex Grid: 7 hexagons in a honeycomb
             geometry = new THREE.BufferGeometry();
-            const spiralPoints = [];
-            const steps = highQuality ? 16 : 5;
-            for (let i = 0; i < steps; i++) {
-                spiralPoints.push(new THREE.Vector3(i - steps/2 + 0.5, steps/2 - i - 0.5, 0));
-                spiralPoints.push(new THREE.Vector3(steps/2 - i - 0.5, steps/2 - i - 0.5, 0));
+            {
+                const hex = (cx, cy, r, segs) => {
+                    const pts = [];
+                    for (let i = 0; i < segs; i++) {
+                        const a = (i / segs) * Math.PI * 2;
+                        pts.push(new THREE.Vector3(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 0));
+                    }
+                    pts.push(pts[0]);
+                    return pts;
+                };
+                const segs = highQuality ? 48 : 6;
+                const r = 0.32;
+                const centers = [
+                    [0, 0],
+                    [r * Math.sqrt(3), 0],
+                    [-r * Math.sqrt(3), 0],
+                    [r * Math.sqrt(3) / 2, r * 1.5],
+                    [-r * Math.sqrt(3) / 2, r * 1.5],
+                    [r * Math.sqrt(3) / 2, -r * 1.5],
+                    [-r * Math.sqrt(3) / 2, -r * 1.5]
+                ];
+                let pts = [];
+                for (const [cx, cy] of centers) {
+                    pts = pts.concat(hex(cx, cy, r, segs));
+                }
+                geometry.setFromPoints(pts);
             }
-            geometry.setFromPoints(spiralPoints);
             break;
-        case 2: // Prism (triangle)
-            geometry = new THREE.CircleGeometry(1, highQuality ? 48 : 3);
-            break;
-        case 3: // Pulse Node (star)
+        case 1: // Wireframe Maze: grid with a zigzag path
             geometry = new THREE.BufferGeometry();
-            const starPoints = [];
-            const starSteps = highQuality ? 40 : 10;
-            for (let i = 0; i < starSteps; i++) {
-                const r = i % 2 === 0 ? 1 : 0.5;
-                const a = (i / starSteps) * Math.PI * 2;
-                starPoints.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, 0));
+            {
+                const size = 1.6;
+                const gridN = highQuality ? 7 : 4;
+                const pts = [];
+                // Draw grid
+                for (let i = 0; i <= gridN; i++) {
+                    const t = -size / 2 + (size * i) / gridN;
+                    pts.push(new THREE.Vector3(t, -size / 2, 0));
+                    pts.push(new THREE.Vector3(t, size / 2, 0));
+                    pts.push(new THREE.Vector3(-size / 2, t, 0));
+                    pts.push(new THREE.Vector3(size / 2, t, 0));
+                }
+                // Draw zigzag path
+                let x = -size / 2, y = -size / 2;
+                pts.push(new THREE.Vector3(x, y, 0));
+                for (let i = 0; i < gridN; i++) {
+                    x = (i % 2 === 0) ? size / 2 : -size / 2;
+                    y += size / gridN;
+                    pts.push(new THREE.Vector3(x, y, 0));
+                }
+                geometry.setFromPoints(pts);
             }
-            starPoints.push(starPoints[0]);
-            geometry.setFromPoints(starPoints);
+            break;
+        case 2: // Data Prism: 3D prism wireframe projected to 2D
+            geometry = new THREE.BufferGeometry();
+            {
+                // Prism base
+                const sides = highQuality ? 8 : 6;
+                const r = 0.9;
+                const h = 1.1;
+                const pts = [];
+                // Bottom face
+                for (let i = 0; i < sides; i++) {
+                    const a = (i / sides) * Math.PI * 2;
+                    pts.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, -h / 2));
+                }
+                // Top face
+                for (let i = 0; i < sides; i++) {
+                    const a = (i / sides) * Math.PI * 2;
+                    pts.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, h / 2));
+                }
+                // Connect sides
+                for (let i = 0; i < sides; i++) {
+                    pts.push(new THREE.Vector3(Math.cos(i / sides * Math.PI * 2) * r, Math.sin(i / sides * Math.PI * 2) * r, -h / 2));
+                    pts.push(new THREE.Vector3(Math.cos(i / sides * Math.PI * 2) * r, Math.sin(i / sides * Math.PI * 2) * r, h / 2));
+                }
+                geometry.setFromPoints(pts);
+            }
+            break;
+        case 3: // Pulse Node: central node with radiating lines and orbiting nodes
+            geometry = new THREE.BufferGeometry();
+            {
+                const rays = highQuality ? 12 : 6;
+                const pts = [];
+                // Central node
+                for (let i = 0; i < rays; i++) {
+                    const a = (i / rays) * Math.PI * 2;
+                    pts.push(new THREE.Vector3(0, 0, 0));
+                    pts.push(new THREE.Vector3(Math.cos(a), Math.sin(a), 0));
+                }
+                // Orbiting nodes (small circles)
+                const segs = highQuality ? 24 : 8;
+                for (let i = 0; i < rays; i++) {
+                    const a = (i / rays) * Math.PI * 2;
+                    const cx = Math.cos(a);
+                    const cy = Math.sin(a);
+                    for (let j = 0; j <= segs; j++) {
+                        const b = (j / segs) * Math.PI * 2;
+                        pts.push(new THREE.Vector3(cx + 0.18 * Math.cos(b), cy + 0.18 * Math.sin(b), 0));
+                    }
+                }
+                geometry.setFromPoints(pts);
+            }
             break;
         default:
             geometry = new THREE.CircleGeometry(1, highQuality ? 48 : 5);
@@ -89,7 +167,7 @@ function createIconMesh(idx, highQuality = false) {
         transparent: true,
         opacity: 0.85
     });
-    mesh = new THREE.LineLoop(geometry, material);
+    mesh = new THREE.LineSegments(geometry, material);
     mesh.position.set(0, 0, 0);
     return mesh;
 }
