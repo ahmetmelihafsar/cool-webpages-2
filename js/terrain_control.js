@@ -16,6 +16,7 @@
 /** @typedef {import('three')} THREE */
 
 let scene, camera, renderer, terrainMesh, wireframeMesh;
+let controls = null;
 let cursorMesh = null;
 let axesHelper = null;
 let markers = [];
@@ -119,6 +120,17 @@ function initThree() {
     camera.position.set(0, -80, 60);
     camera.lookAt(0, 0, 0);
 
+    // OrbitControls for camera navigation
+    if (THREE.OrbitControls) {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.screenSpacePanning = false;
+        controls.minDistance = 30;
+        controls.maxDistance = 200;
+        controls.maxPolarAngle = Math.PI / 2;
+    }
+
     // Lights
     const ambient = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambient);
@@ -161,6 +173,7 @@ function initThree() {
  */
 function animate() {
     requestAnimationFrame(animate);
+    if (controls) controls.update();
     renderer.render(scene, camera);
 }
 
@@ -261,10 +274,10 @@ function createCursorMesh() {
 }
 
 /**
- * Create a marker mesh for a waypoint.
+ * Create a marker mesh for a waypoint, with order label.
  * @param {string} type - triangle, square, circle
  * @param {THREE.Vector3} position
- * @returns {THREE.Mesh}
+ * @returns {THREE.Group}
  */
 function createWaypointMarker(type, position) {
     let geometry, material;
@@ -287,7 +300,35 @@ function createWaypointMarker(type, position) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.copy(position);
     mesh.position.z += 1.2;
-    return mesh;
+
+    // Add order label (number)
+    const group = new THREE.Group();
+    group.add(mesh);
+
+    const order = markers.length + 1;
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.font = "bold 36px monospace";
+    ctx.fillStyle = "#FFB400";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.strokeStyle = "#181818";
+    ctx.lineWidth = 4;
+    ctx.strokeText(order.toString(), 32, 32);
+    ctx.fillText(order.toString(), 32, 32);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+    const sprite = new THREE.Sprite(spriteMat);
+    sprite.scale.set(3, 3, 1);
+    sprite.position.set(0, 0, 2.5);
+    group.add(sprite);
+
+    group.position.copy(position);
+    group.position.z += 1.2;
+    return group;
 }
 
 /**
