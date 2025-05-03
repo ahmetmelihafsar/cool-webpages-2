@@ -1,8 +1,8 @@
 // js/challenge_selector.js
 
 /**
- * Challenge Selector Page Logic (Advanced)
- * - Renders live geometric icon previews in carousel.
+ * Challenge Selector Page Logic (Advanced, WebGL context fix)
+ * - Renders live geometric icon previews in carousel (WebGL context reuse).
  * - Smooth carousel transitions and highlight animation.
  * - Shows challenge description and unlock status.
  * - Timeline scrubber updates value display.
@@ -36,6 +36,13 @@ let canvas, carouselItemsDiv, labelSpan, descDiv, timelineScrubber, timelineValu
 
 // ---- Three.js Scene for Main Canvas ----
 let renderer, scene, camera, iconMeshes = [];
+
+// ---- Carousel Preview Cache ----
+/**
+ * Caches preview canvases for each challenge to avoid WebGL context exhaustion.
+ * @type {HTMLCanvasElement[]}
+ */
+const previewCanvasCache = [];
 
 /**
  * Create a geometric icon mesh for a challenge.
@@ -115,17 +122,24 @@ function renderIcon() {
 
 /**
  * Render a geometric icon preview to a canvas for the carousel.
+ * Caches the result to avoid creating too many WebGL contexts.
  * @param {number} idx
  * @returns {HTMLCanvasElement}
  */
 function renderIconPreview(idx) {
+    if (previewCanvasCache[idx]) {
+        return previewCanvasCache[idx];
+    }
     const previewCanvas = document.createElement('canvas');
     previewCanvas.width = 64;
     previewCanvas.height = 64;
-    const previewRenderer = new THREE.WebGLRenderer({ canvas: previewCanvas, alpha: true, antialias: true });
-    previewRenderer.setClearColor(0x000000, 0);
-    previewRenderer.setSize(64, 64, false);
-
+    // Use a single offscreen renderer for all previews
+    if (!renderIconPreview._renderer) {
+        renderIconPreview._renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+        renderIconPreview._renderer.setClearColor(0x000000, 0);
+        renderIconPreview._renderer.setSize(64, 64, false);
+    }
+    const previewRenderer = renderIconPreview._renderer;
     const previewCamera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     previewCamera.position.set(0, 0, 6);
 
@@ -134,6 +148,22 @@ function renderIconPreview(idx) {
     mesh.rotation.z = Math.PI / 8;
     previewScene.add(mesh);
     previewRenderer.render(previewScene, previewCamera);
+
+    // Copy rendered pixels to the previewCanvas
+    const pixels = new Uint8Array(4 * 64 * 64);
+    previewRenderer.readRenderTargetPixels(
+        previewRenderer.getRenderTarget() || previewRenderer.getRenderTarget(),
+        0, 0, 64, 64, pixels
+    );
+    const ctx = previewCanvas.getContext('2d');
+    const imageData = ctx.createImageData(64, 64);
+    for (let i = 0; i < pixels.length; i++) {
+        imageData.data[i] = pixels[i];
+    }
+    ctx.putImageData(imageData, 0, 0);
+
+    previewCanvas.style.filter = CHALLENGES[idx].unlocked ? 'drop-shadow(0 0 8px #FFB400)' : 'grayscale(1) opacity(0.5)';
+    previewCanvasCache[idx] = previewCanvas;
     return previewCanvas;
 }
 
@@ -181,7 +211,7 @@ function updateCarousel() {
     void carouselItemsDiv.offsetWidth;
     carouselItemsDiv.classList.add('fade');
 
-    // Update carousel items with live icon previews
+    // Update carousel items with cached icon previews
     carouselItemsDiv.innerHTML = '';
     CHALLENGES.forEach((challenge, idx) => {
         const div = document.createElement('div');
@@ -189,9 +219,8 @@ function updateCarousel() {
         div.tabIndex = 0;
         div.setAttribute('data-idx', idx);
         div.title = challenge.name;
-        // Render icon preview
+        // Use cached icon preview
         const iconCanvas = renderIconPreview(idx);
-        iconCanvas.style.filter = challenge.unlocked ? 'drop-shadow(0 0 8px #FFB400)' : 'grayscale(1) opacity(0.5)';
         div.appendChild(iconCanvas);
         carouselItemsDiv.appendChild(div);
     });
