@@ -1,0 +1,53 @@
+/* /styles/main.css */
+
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Define core theme variables based on frontend_plan.md */
+:root {
+  --color-background: #050505; /* Near-black background */
+  --color-primary-accent: #FFB400; /* Neon Amber accent */
+  --color-secondary-text: #a0a0a0; /* Grayscale for secondary info */
+  --color-primary-text: #f0f0f0; /* Primary text color */
+  --font-primary: 'Roboto Mono', monospace; /* Monospace font */
+}
+
+/* Apply base styles to the body */
+body {
+  background-color: var(--color-background);
+  color: var(--color-primary-text);
+  font-family: var(--font-primary);
+  /* Prevent scrollbars unless necessary within components (as per plan) */
+  overflow: hidden;
+  /* Add some padding for basic layout */
+  padding: 20px;
+}
+
+/* Basic styling for the navigation links (can be refined later) */
+nav ul {
+    list-style: none;
+    padding: 20px 0;
+}
+
+nav ul li {
+    margin-bottom: 10px;
+}
+
+nav ul li a {
+    color: var(--color-primary-accent);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+nav ul li a:hover {
+    color: var(--color-primary-text);
+}
+
+h1 {
+    color: var(--color-primary-accent);
+    margin-bottom: 20px;
+}
