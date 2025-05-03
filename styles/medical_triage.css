@@ -1,216 +1,257 @@
-/* styles/medical_triage.css */
+/* /styles/medical_triage.css */
 
-/* Layout for triage dashboard */
-#triage-dashboard {
+/* Use variables defined in main.css (assuming they exist) */
+:root {
+    --color-background: #050505;
+    --color-primary-accent: #FFB400; /* Neon Amber */
+    --color-secondary-accent: #00FFC6; /* Neon Cyan/Teal */
+    --color-primary-text: #f0f0f0;
+    --color-secondary-text: #a0a0a0;
+    --font-primary: 'Roboto Mono', monospace;
+}
+
+body {
+    background-color: var(--color-background);
+    color: var(--color-primary-text);
+    font-family: var(--font-primary);
+    margin: 0; /* Ensure no default body margin */
+    overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+/* Main Interface Grid Layout */
+#triage-interface {
     display: grid;
-    grid-template-columns: 1.1fr 2fr 1.2fr;
-    grid-template-areas: 
-        "list 3d info";
-    gap: 2rem;
-    height: 85vh;
-    padding: 2rem 2vw;
-    background: var(--color-background, #050505);
+    grid-template-columns: 2.5fr 1fr; /* Adjust ratio as needed */
+    grid-template-areas: "canvas sidebar";
+    gap: 1.5rem;
+    height: calc(100vh - 120px); /* Adjust based on header/footer height */
+    padding: 1.5rem;
     box-sizing: border-box;
-    position: relative;
 }
 
-/* Patient List Panel */
-#patient-list-container {
-    grid-area: list;
-    background: rgba(10, 10, 10, 0.98);
-    border: 2px solid var(--color-primary-accent, #FFB400);
-    border-radius: 12px;
-    padding: 1.2rem 1rem;
-    min-width: 220px;
-    box-shadow: 0 0 16px #FFB40033;
-    font-family: var(--font-primary, 'Roboto Mono', monospace);
+/* Canvas Area */
+#canvas-container {
+    grid-area: canvas;
+    background: #0a0a0a;
+    border: 1px solid var(--color-primary-accent);
+    border-radius: 8px;
+    display: flex; /* Center canvas */
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Ensure canvas doesn't overflow */
+    box-shadow: 0 0 15px rgba(255, 180, 0, 0.2);
 }
 
-#patient-list-container h2 {
-    color: var(--color-primary-accent, #FFB400);
-    font-size: 1.2rem;
+#triage-canvas {
+    width: 100%;
+    height: 100%;
+    display: block; /* Remove extra space below canvas */
+}
+
+/* Sidebar Area */
+#sidebar {
+    grid-area: sidebar;
+    background: rgba(10, 10, 10, 0.95);
+    border: 1px solid var(--color-primary-accent);
+    border-radius: 8px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Space between sections */
+    overflow-y: auto; /* Allow scrolling if content overflows */
+    box-shadow: 0 0 15px rgba(255, 180, 0, 0.2);
+}
+
+/* Common Sidebar Section Styling */
+.sidebar-section {
+    border: 1px solid rgba(255, 180, 0, 0.3);
+    border-radius: 6px;
+    padding: 1rem;
+    background: rgba(20, 20, 20, 0.5);
+}
+
+.sidebar-section h2 {
+    color: var(--color-primary-accent);
+    font-size: 1.1rem;
+    margin-top: 0;
     margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 180, 0, 0.5);
+    padding-bottom: 0.5rem;
     letter-spacing: 1px;
 }
 
-#patient-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.patient-item {
-    background: #111;
-    color: var(--color-primary-text, #f0f0f0);
-    border-left: 5px solid var(--color-secondary-text, #a0a0a0);
-    margin-bottom: 0.7rem;
-    padding: 0.7rem 1rem;
-    border-radius: 6px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    box-shadow: 0 0 8px #0008;
-}
-
-.patient-item.priority-high {
-    border-left-color: #FF3B3B;
-}
-.patient-item.priority-medium {
-    border-left-color: #FFB400;
-}
-.patient-item.priority-low {
-    border-left-color: #00FFC6;
-}
-
-.patient-item.selected,
-.patient-item:hover {
-    box-shadow: 0 0 12px #FFB40088;
-    border-left-width: 7px;
-    background: #181818;
-}
-
-/* 3D Visualization Panel */
-#patient-details-3d {
-    grid-area: 3d;
+/* Vitals HUD Styling */
+#vitals-hud .vital-item {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #0a0a0a 80%, #1a1a1a 100%);
-    border: 2px solid var(--color-primary-accent, #FFB400);
-    border-radius: 16px;
-    min-width: 340px;
-    min-height: 420px;
-    position: relative;
-    box-shadow: 0 0 32px #FFB40022;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
 }
 
-#vitals-canvas {
-    width: 100%;
-    height: 420px;
-    background: transparent;
-    display: block;
-    border-radius: 12px;
+#vitals-hud .vital-label {
+    color: var(--color-secondary-text);
+    margin-right: 0.5rem;
+}
+
+#vitals-hud .vital-value {
+    color: var(--color-primary-text);
+    font-weight: bold;
+}
+
+/* Treatment Grid Styling */
+#treatment-grid #action-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+}
+
+.action-btn {
+    background: #1a1a1a;
+    color: var(--color-primary-accent);
+    border: 1px solid var(--color-primary-accent);
+    padding: 0.6rem 0.5rem;
+    font-family: var(--font-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 4px;
+    text-align: center;
+    transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 5px rgba(255, 180, 0, 0.3);
+}
+
+.action-btn:hover,
+.action-btn:focus {
+    background: var(--color-primary-accent);
+    color: #050505; /* Dark text on hover */
+    box-shadow: 0 0 10px rgba(255, 180, 0, 0.7);
     outline: none;
 }
 
-/* Info Panel */
-#patient-info-panel {
-    grid-area: info;
-    background: rgba(15, 15, 15, 0.98);
-    border: 2px solid var(--color-primary-accent, #FFB400);
-    border-radius: 12px;
-    padding: 1.2rem 1rem;
-    min-width: 240px;
-    color: var(--color-primary-text, #f0f0f0);
-    font-family: var(--font-primary, 'Roboto Mono', monospace);
-    box-shadow: 0 0 16px #FFB40033;
+/* Injury Labels Styling */
+#injury-labels #injury-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
 }
 
-#patient-info-panel h2 {
-    color: var(--color-primary-accent, #FFB400);
-    font-size: 1.15rem;
-    margin-bottom: 0.8rem;
+#injury-labels li {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
 }
 
-#vitals-text {
-    margin-bottom: 1.2rem;
-    font-size: 1.05rem;
-    line-height: 1.5;
+.injury-marker {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    background-color: var(--color-primary-accent);
+    color: var(--color-background);
+    border-radius: 50%;
+    font-weight: bold;
+    margin-right: 0.75rem;
+    font-size: 0.8rem;
 }
 
-#logs {
-    font-size: 0.95rem;
-    color: var(--color-secondary-text, #a0a0a0);
-    background: #181818;
-    border-radius: 6px;
-    padding: 0.7rem;
-    min-height: 60px;
-    max-height: 140px;
-    overflow-y: auto;
-    box-shadow: 0 0 8px #FFB40022;
-}
-
-/* Header and Footer */
+/* Header and Footer (Keep similar styles) */
 header, footer {
     background: #000;
-    color: var(--color-primary-accent, #FFB400);
-    padding: 0.7rem 2vw;
-    font-family: var(--font-primary, 'Roboto Mono', monospace);
+    color: var(--color-primary-accent);
+    padding: 0.8rem 1.5rem; /* Adjusted padding */
+    font-family: var(--font-primary);
     letter-spacing: 1px;
+    display: flex; /* Use flex for alignment */
+    justify-content: space-between;
+    align-items: center;
+}
+
+header {
     border-bottom: 1px solid #222;
+    height: 60px; /* Fixed height */
+    box-sizing: border-box;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.4rem;
 }
 
 header nav a {
-    color: var(--color-primary-accent, #FFB400);
+    color: var(--color-primary-accent);
     text-decoration: none;
     font-weight: bold;
-    margin-left: 1.5rem;
     transition: text-shadow 0.2s;
+    font-size: 0.95rem;
 }
 
 header nav a:hover {
-    text-shadow: 0 0 8px #FFB400;
+    text-shadow: 0 0 8px var(--color-primary-accent);
 }
 
 footer {
     border-top: 1px solid #222;
     text-align: center;
-    font-size: 0.95rem;
-    margin-top: 2rem;
-    background: #050505;
+    font-size: 0.9rem;
+    height: 60px; /* Fixed height */
+    box-sizing: border-box;
+    justify-content: center; /* Center footer content */
 }
 
-/* Cinematic Letterbox */
-body::before, body::after {
-    content: "";
-    display: block;
-    position: fixed;
-    left: 0; right: 0;
-    height: 32px;
-    background: #000;
-    z-index: 100;
-    pointer-events: none;
-}
-body::before { top: 0; }
-body::after { bottom: 0; }
-
-/* Scrollbar styling */
+/* Scrollbar styling (Keep) */
 ::-webkit-scrollbar {
     width: 8px;
     background: #181818;
 }
 ::-webkit-scrollbar-thumb {
-    background: #FFB40055;
+    background: rgba(255, 180, 0, 0.4); /* Slightly less intense */
     border-radius: 4px;
 }
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 180, 0, 0.7);
+}
 
-/* Responsive adjustments */
-@media (max-width: 1100px) {
-    #triage-dashboard {
-        grid-template-columns: 1fr 2fr;
-        grid-template-areas: 
-            "list 3d"
-            "info 3d";
-        gap: 1.2rem;
+/* Responsive adjustments for the new layout */
+@media (max-width: 900px) {
+    #triage-interface {
+        grid-template-columns: 1fr; /* Stack canvas and sidebar */
+        grid-template-areas:
+            "canvas"
+            "sidebar";
+        height: auto; /* Allow height to adjust */
+        padding: 1rem;
+        gap: 1rem;
     }
-    #patient-info-panel {
-        min-width: 160px;
+
+    #canvas-container {
+        min-height: 40vh; /* Ensure canvas has some height */
+    }
+
+    #sidebar {
+        max-height: 50vh; /* Limit sidebar height */
     }
 }
-@media (max-width: 800px) {
-    #triage-dashboard {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        height: auto;
+
+@media (max-width: 600px) {
+    header h1 {
+        font-size: 1.2rem;
     }
-    #patient-list-container,
-    #patient-details-3d,
-    #patient-info-panel {
-        min-width: unset;
-        width: 100%;
+    header nav a {
+        font-size: 0.85rem;
     }
-    #vitals-canvas {
-        height: 260px;
+    footer {
+        font-size: 0.8rem;
+    }
+    .sidebar-section h2 {
+        font-size: 1rem;
+    }
+    .action-btn {
+        font-size: 0.85rem;
+        padding: 0.5rem;
+    }
+    #injury-labels #injury-list {
+        font-size: 0.85rem;
     }
 }

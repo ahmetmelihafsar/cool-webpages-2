@@ -1,20 +1,19 @@
-// js/medical_triage.js
+// /js/medical_triage.js
 
 /**
- * Medical Triage Page Logic
- * - Handles patient queue, vitals visualization, and info panel updates.
- * - Initializes Three.js scene for abstract vitals display.
- * - Simulates patient data and vitals updates.
+ * Medical Triage Page Logic (Rewritten)
+ * - Handles 3D visualization, HUD updates, injury list, and treatment actions.
+ * - Initializes Three.js scene on the triage canvas.
+ * - Simulates patient data and vitals updates for the HUD.
  * - Stubs for injury labels and treatment actions.
- * Author: Project Watch Dogs UI
+ * Author: Roo
  */
 
 /// --- Mock Data ---
 
 /**
  * Array of mock patients for triage simulation.
- * Each patient has id, name, status, priority, vitals, and logs.
- * Priority: high | medium | low
+ * Using only the first patient for display in this version.
  */
 const mockPatients = [
     {
@@ -23,145 +22,186 @@ const mockPatients = [
         status: "Critical",
         priority: "high",
         vitals: { hr: 132, spo2: 88, life: 42 },
+        injuries: [ // Added injuries array
+            { id: "A", description: "Head Trauma" },
+            { id: "B", description: "Laceration - Left Arm" },
+            { id: "C", description: "Internal Bleeding (Suspected)" }
+        ],
         logs: ["Severe laceration (left arm)", "Low SpO₂", "Unresponsive to pain"],
     },
-    {
-        id: "P2",
-        name: "Dana Walsh",
-        status: "Stable",
-        priority: "medium",
-        vitals: { hr: 98, spo2: 97, life: 87 },
-        logs: ["Minor burns (right hand)", "Responsive", "Vitals within normal range"],
-    },
-    {
-        id: "P3",
-        name: "James Heller",
-        status: "Observation",
-        priority: "low",
-        vitals: { hr: 76, spo2: 99, life: 98 },
-        logs: ["No visible injuries", "Vitals optimal", "Monitoring for shock"],
-    }
+    // Add more patients here if needed for future selection logic
 ];
 
-let selectedPatientIndex = 0;
+let selectedPatientIndex = 0; // Index of the patient currently displayed
 let vitalsInterval = null;
 
 /// --- DOM Elements ---
-const dom = {};
+const dom = {
+    triageCanvas: null,
+    canvasContainer: null,
+    hudHeartRate: null,
+    hudSpo2: null,
+    hudLifePercent: null,
+    actionButtonsContainer: null,
+    injuryList: null,
+};
 
+/// --- Three.js Variables ---
+let scene, camera, renderer, mesh, pulseMaterial, animationId;
+
+/// --- Initialization ---
 document.addEventListener("DOMContentLoaded", () => {
-    dom.patientList = document.getElementById("patient-list");
-    dom.infoPanel = document.getElementById("patient-info-panel");
-    dom.vitalsText = document.getElementById("vitals-text");
-    dom.logs = document.getElementById("logs");
-    dom.patientIdDisplay = document.getElementById("patient-id-display");
-    dom.vitalsCanvas = document.getElementById("vitals-canvas");
+    // Get DOM elements
+    dom.triageCanvas = document.getElementById("triage-canvas");
+    dom.canvasContainer = document.getElementById("canvas-container");
+    dom.hudHeartRate = document.getElementById("hud-heart-rate");
+    dom.hudSpo2 = document.getElementById("hud-spo2");
+    dom.hudLifePercent = document.getElementById("hud-life-percent");
+    dom.actionButtonsContainer = document.getElementById("action-buttons");
+    dom.injuryList = document.getElementById("injury-list");
 
-    renderPatientList();
-    selectPatient(0);
+    // Initial UI update with the first patient's data
+    if (mockPatients.length > 0) {
+        updateUI(mockPatients[selectedPatientIndex]);
+    }
 
     // Simulate vitals updates every 2 seconds
     vitalsInterval = setInterval(simulateVitals, 2000);
 
     // Initialize Three.js visualization
-    initVitals3D();
+    initThreeScene();
+
+    // Setup listeners for action buttons
+    setupActionButtons();
+
+    // Add resize listener for Three.js canvas
+    window.addEventListener('resize', onWindowResize, false);
 });
 
 /**
- * Render the patient queue list and attach click handlers.
+ * Updates the HUD and Injury List based on patient data.
+ * @param {object} patient - The patient data object.
  */
-function renderPatientList() {
-    dom.patientList.innerHTML = "";
-    mockPatients.forEach((patient, idx) => {
-        const li = document.createElement("li");
-        li.className = `patient-item priority-${patient.priority}` + (idx === selectedPatientIndex ? " selected" : "");
-        li.dataset.patientId = patient.id;
-        li.textContent = `ID: ${patient.id} | Status: ${patient.status} | HR: ${patient.vitals.hr} | SpO₂: ${patient.vitals.spo2}% | Life: ${patient.vitals.life}%`;
-        li.addEventListener("click", () => selectPatient(idx));
-        dom.patientList.appendChild(li);
-    });
-}
+function updateUI(patient) {
+    if (!patient) return;
 
-/**
- * Select a patient by index, update info panel and 3D view.
- * @param {number} idx 
- */
-function selectPatient(idx) {
-    selectedPatientIndex = idx;
-    renderPatientList();
-    const patient = mockPatients[idx];
-    dom.patientIdDisplay.textContent = patient.id;
-    dom.vitalsText.innerHTML = `
-        <strong>Name:</strong> ${patient.name}<br>
-        <strong>Status:</strong> ${patient.status}<br>
-        <strong>Heart Rate:</strong> ${patient.vitals.hr} bpm<br>
-        <strong>SpO₂:</strong> ${patient.vitals.spo2}%<br>
-        <strong>Life:</strong> ${patient.vitals.life}%
-    `;
-    dom.logs.innerHTML = patient.logs.map(log => `<div>&#8226; ${log}</div>`).join("");
-    updateVitals3D(patient.vitals);
+    // Update Vitals HUD
+    dom.hudHeartRate.textContent = `${patient.vitals.hr} bpm`;
+    dom.hudSpo2.textContent = `${patient.vitals.spo2} %`;
+    dom.hudLifePercent.textContent = `${patient.vitals.life} %`;
+
+    // Update Injury List
+    dom.injuryList.innerHTML = ""; // Clear previous list
+    if (patient.injuries && patient.injuries.length > 0) {
+        patient.injuries.forEach(injury => {
+            const li = document.createElement("li");
+            li.innerHTML = `<span class="injury-marker">${injury.id}</span> ${injury.description}`;
+            dom.injuryList.appendChild(li);
+        });
+    } else {
+        dom.injuryList.innerHTML = "<li>No injuries listed.</li>";
+    }
+
+    // Update 3D scene based on vitals
+    updateSceneOnVitals(patient.vitals);
 }
 
 /**
  * Simulate vitals changes for demo purposes.
- * Randomly varies HR, SpO₂, and Life for each patient.
  */
 function simulateVitals() {
-    mockPatients.forEach((p, i) => {
-        // Random walk for vitals
-        p.vitals.hr = Math.max(50, Math.min(160, p.vitals.hr + Math.round((Math.random() - 0.5) * 6)));
-        p.vitals.spo2 = Math.max(80, Math.min(100, p.vitals.spo2 + Math.round((Math.random() - 0.5) * 2)));
-        p.vitals.life = Math.max(0, Math.min(100, p.vitals.life + Math.round((Math.random() - 0.5) * 3)));
-    });
-    // Refresh UI for selected patient
-    selectPatient(selectedPatientIndex);
+    // Simulate changes for the selected patient
+    const patient = mockPatients[selectedPatientIndex];
+    if (!patient) return;
+
+    // Random walk for vitals
+    patient.vitals.hr = Math.max(50, Math.min(160, patient.vitals.hr + Math.round((Math.random() - 0.5) * 6)));
+    patient.vitals.spo2 = Math.max(80, Math.min(100, patient.vitals.spo2 + Math.round((Math.random() - 0.5) * 2)));
+    patient.vitals.life = Math.max(0, Math.min(100, patient.vitals.life + Math.round((Math.random() - 0.5) * 3)));
+
+    // Refresh UI
+    updateUI(patient);
 }
+
+/**
+ * Sets up click listeners for the treatment action buttons.
+ */
+function setupActionButtons() {
+    const buttons = dom.actionButtonsContainer.querySelectorAll(".action-btn");
+    buttons.forEach(button => {
+        button.addEventListener("click", (event) => {
+            const action = event.target.dataset.action;
+            console.log(`Treatment Action Clicked: ${action}`);
+            // TODO: Implement actual treatment logic and update patient state/logs
+            alert(`Action: ${action} (Stub)`); // Simple feedback for now
+        });
+    });
+}
+
 
 /// --- Three.js Visualization ---
 
-let scene, camera, renderer, mesh, pulseMaterial, animationId;
-
 /**
  * Initialize Three.js scene for vitals visualization.
- * Renders an abstract wireframe/point-cloud human mesh (stub: animated sphere).
  */
-function initVitals3D() {
+function initThreeScene() {
     // Ensure Three.js is available
     if (typeof THREE === "undefined") {
-        dom.vitalsCanvas.getContext("2d").font = "20px monospace";
-        dom.vitalsCanvas.getContext("2d").fillStyle = "#FFB400";
-        dom.vitalsCanvas.getContext("2d").fillText("Three.js not loaded", 20, 60);
+        console.error("Three.js library not loaded!");
+        // Display error on canvas if possible
+        const ctx = dom.triageCanvas.getContext("2d");
+        if (ctx) {
+            ctx.font = "16px monospace";
+            ctx.fillStyle = "#FFB400";
+            ctx.fillText("Error: Three.js not loaded", 10, 30);
+        }
+        return;
+    }
+    if (!dom.triageCanvas || !dom.canvasContainer) {
+        console.error("Canvas or container element not found!");
         return;
     }
 
-    // Set up renderer
-    renderer = new THREE.WebGLRenderer({ canvas: dom.vitalsCanvas, alpha: true, antialias: true });
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ canvas: dom.triageCanvas, alpha: true, antialias: true });
     renderer.setClearColor(0x000000, 0); // transparent background
-    renderer.setSize(dom.vitalsCanvas.clientWidth || 400, dom.vitalsCanvas.clientHeight || 420);
+    renderer.setSize(dom.canvasContainer.clientWidth, dom.canvasContainer.clientHeight);
 
-    // Scene and camera
+    // Scene and Camera
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(45, (dom.vitalsCanvas.clientWidth || 400) / (dom.vitalsCanvas.clientHeight || 420), 0.1, 1000);
-    camera.position.set(0, 0, 7);
+    camera = new THREE.PerspectiveCamera(45, dom.canvasContainer.clientWidth / dom.canvasContainer.clientHeight, 0.1, 1000);
+    camera.position.set(0, 0, 7); // Position camera further back
 
-    // Lighting (minimal for wireframe)
-    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambient);
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const pointLight = new THREE.PointLight(0xffffff, 0.8);
+    camera.add(pointLight); // Attach light to camera
+    scene.add(camera);
 
-    // Geometry: stub as a wireframe sphere (replace with human mesh for full implementation)
+    // Geometry: Stub wireframe sphere
     const geometry = new THREE.SphereGeometry(2, 32, 24);
-    pulseMaterial = new THREE.MeshBasicMaterial({ color: 0xFFB400, wireframe: true, transparent: true, opacity: 0.7 });
+    pulseMaterial = new THREE.MeshPhongMaterial({ // Use Phong for lighting
+        color: 0xFFB400,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.7,
+        shininess: 50
+    });
     mesh = new THREE.Mesh(geometry, pulseMaterial);
     scene.add(mesh);
 
-    // Particle effect: stub as random points (replace with human point cloud)
+    // Particle effect: Stub random points
     const particles = new THREE.BufferGeometry();
-    const particleCount = 400;
+    const particleCount = 500; // Increased count
     const positions = [];
+    const sphereRadius = 2.5; // Slightly larger radius for particles
     for (let i = 0; i < particleCount; i++) {
-        const phi = Math.random() * Math.PI;
-        const theta = Math.random() * 2 * Math.PI;
-        const r = 2 + Math.random() * 0.2;
+        const u = Math.random();
+        const v = Math.random();
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+        const r = sphereRadius + (Math.random() - 0.5) * 0.5; // Add some depth variation
         positions.push(
             r * Math.sin(phi) * Math.cos(theta),
             r * Math.sin(phi) * Math.sin(theta),
@@ -169,55 +209,76 @@ function initVitals3D() {
         );
     }
     particles.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-    const particleMaterial = new THREE.PointsMaterial({ color: 0xFFB400, size: 0.08, opacity: 0.8, transparent: true });
+    const particleMaterial = new THREE.PointsMaterial({
+        color: 0xFFB400, // Match accent
+        size: 0.06,
+        opacity: 0.6,
+        transparent: true,
+        sizeAttenuation: true // Points scale with distance
+    });
     const pointCloud = new THREE.Points(particles, particleMaterial);
     scene.add(pointCloud);
 
-    // Stub: Injury labels and connector lines (not implemented)
-    // TODO: Add injury label sprites and lines to mesh
-
-    animateVitals();
+    // Start animation loop
+    animateScene();
 }
 
 /**
- * Animate the 3D mesh to pulse with heart rate.
+ * Animation loop for the Three.js scene.
  */
-function animateVitals() {
-    cancelAnimationFrame(animationId);
-    let t0 = performance.now();
-    function animate() {
-        const patient = mockPatients[selectedPatientIndex];
+function animateScene() {
+    animationId = requestAnimationFrame(animateScene); // Loop
+
+    const patient = mockPatients[selectedPatientIndex];
+    if (mesh && patient) {
         // Pulse scale with HR
-        const pulse = 1 + 0.08 * Math.sin((performance.now() - t0) * 0.008 * (patient.vitals.hr / 60));
+        const pulseFrequency = (patient.vitals.hr / 60) * Math.PI * 2; // Hz to rad/s
+        const pulse = 1 + 0.05 * Math.sin(performance.now() * 0.001 * pulseFrequency);
         mesh.scale.set(pulse, pulse, pulse);
-        mesh.material.opacity = 0.5 + 0.3 * Math.abs(Math.sin((performance.now() - t0) * 0.008));
-        mesh.rotation.y += 0.003;
-        renderer.render(scene, camera);
-        animationId = requestAnimationFrame(animate);
+
+        // Subtle rotation
+        mesh.rotation.y += 0.002;
+        mesh.rotation.x += 0.001;
     }
-    animate();
+
+    renderer.render(scene, camera);
 }
 
 /**
- * Update the 3D visualization based on new vitals.
- * @param {object} vitals 
+ * Update the 3D visualization based on new vitals (e.g., color).
+ * @param {object} vitals
  */
-function updateVitals3D(vitals) {
+function updateSceneOnVitals(vitals) {
+    if (!mesh || !pulseMaterial) return;
+
     // Change color based on SpO2 and Life %
-    if (!mesh) return;
+    let targetColor;
     if (vitals.spo2 < 90 || vitals.life < 50) {
-        mesh.material.color.set(0xFF3B3B); // red for critical
+        targetColor = new THREE.Color(0xFF3B3B); // Red for critical
     } else if (vitals.spo2 < 95 || vitals.life < 80) {
-        mesh.material.color.set(0xFFB400); // amber for warning
+        targetColor = new THREE.Color(0xFFB400); // Amber for warning
     } else {
-        mesh.material.color.set(0x00FFC6); // cyan for stable
+        targetColor = new THREE.Color(0x00FFC6); // Cyan/Teal for stable
     }
-    // Optionally update particle color similarly
+    // Smoothly transition color (optional, requires tweening library or manual lerp)
+    pulseMaterial.color.copy(targetColor);
+
+    // Adjust opacity based on Life % (optional)
+    pulseMaterial.opacity = 0.5 + (vitals.life / 100) * 0.4;
 }
 
-/// --- Treatment Grid & UI Controls (Stub) ---
+/**
+ * Handle window resize events to adjust camera and renderer.
+ */
+function onWindowResize() {
+    if (!camera || !renderer || !dom.canvasContainer) return;
 
-// TODO: Implement treatment grid with paginated action buttons (Irrigate, Debris Removal, Pain Medicine, etc.)
-// TODO: Add event handling for treatment actions and update logs accordingly
+    const width = dom.canvasContainer.clientWidth;
+    const height = dom.canvasContainer.clientHeight;
 
-// End of js/medical_triage.js
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+}
+
+// End of /js/medical_triage.js

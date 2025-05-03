@@ -16,27 +16,60 @@
             <a href="index.html" id="back-to-index">&larr; Back to Dashboard</a>
         </nav>
     </header>
-    <main id="triage-dashboard">
-        <div id="patient-list-container">
-            <h2>Patient Queue</h2>
-            <ul id="patient-list">
-                <!-- Populated by JS -->
-            </ul>
+
+    <main id="triage-interface">
+        <!-- Main area for the 3D canvas -->
+        <div id="canvas-container">
+            <canvas id="triage-canvas"></canvas>
         </div>
-        <div id="patient-details-3d">
-            <canvas id="vitals-canvas"></canvas>
-        </div>
-        <div id="patient-info-panel">
-            <h2>Patient Details (ID: <span id="patient-id-display"></span>)</h2>
-            <div id="vitals-text"></div>
-            <div id="logs"></div>
-        </div>
+
+        <!-- Sidebar for HUD, actions, and labels -->
+        <aside id="sidebar">
+            <section id="vitals-hud" class="sidebar-section">
+                <h2>Vitals HUD</h2>
+                <div class="vital-item">
+                    <span class="vital-label">Heart Rate:</span>
+                    <span id="hud-heart-rate" class="vital-value">-- bpm</span>
+                </div>
+                <div class="vital-item">
+                    <span class="vital-label">SpO₂:</span>
+                    <span id="hud-spo2" class="vital-value">-- %</span>
+                </div>
+                <div class="vital-item">
+                    <span class="vital-label">Life %:</span>
+                    <span id="hud-life-percent" class="vital-value">-- %</span>
+                </div>
+            </section>
+
+            <section id="treatment-grid" class="sidebar-section">
+                <h2>Treatment Actions</h2>
+                <div id="action-buttons">
+                    <button class="action-btn" data-action="irrigate">Irrigate</button>
+                    <button class="action-btn" data-action="debris">Debris Removal</button>
+                    <button class="action-btn" data-action="pain_med">Pain Medicine</button>
+                    <button class="action-btn" data-action="suture">Suture</button>
+                    <button class="action-btn" data-action="bandage">Bandage</button>
+                    <!-- Pagination might be added here later -->
+                </div>
+            </section>
+
+            <section id="injury-labels" class="sidebar-section">
+                <h2>Injury Points</h2>
+                <ul id="injury-list">
+                    <!-- Populated by JS -->
+                    <li><span class="injury-marker">A</span> Head Trauma (Stub)</li>
+                    <li><span class="injury-marker">B</span> Laceration - Arm (Stub)</li>
+                </ul>
+            </section>
+        </aside>
     </main>
+
     <footer>
         <span>&copy; 2025 STEM Tactical Interface</span>
     </footer>
+
     <!-- Scripts -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="js/main.js"></script>
     <script src="js/medical_triage.js"></script>
 </body>
